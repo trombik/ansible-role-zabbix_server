@@ -1,0 +1,6 @@
+---
+- hosts: localhost
+  roles:
+    - ansible-role-zabbix_server
+  vars:
+    zabbix_server_config: ""

@@ -1,0 +1,9 @@
+---
+zabbix_server_user: zabbix_server
+zabbix_server_group: zabbix_server
+zabbix_server_log_dir: /var/log/zabbix_server
+zabbix_server_db_dir: "{{ __zabbix_server_db_dir }}"
+zabbix_server_service: zabbix_server
+zabbix_server_conf_dir: "{{ __zabbix_server_conf_dir }}"
+zabbix_server_conf_file: "{{ __zabbix_server_conf_dir }}/zabbix_server.conf"
+zabbix_server_flags: ""

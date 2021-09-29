@@ -1,0 +1,37 @@
+---
+# tasks file for ansible-role-zabbix_server
+
+- include_vars: "{{ ansible_os_family }}.yml"
+
+- include: "install-{{ ansible_os_family }}.yml"
+
+- name: Create log directory
+  file:
+    path: "{{ zabbix_server_log_dir }}"
+    mode: 0755
+    owner: "{{ zabbix_server_user }}"
+    group: "{{ zabbix_server_group }}"
+    state: directory
+  notify: Restart zabbix_server
+
+- name: Create db directory
+  file:
+    path: "{{ zabbix_server_db_dir }}"
+    mode: 0755
+    owner: "{{ zabbix_server_user }}"
+    group: "{{ zabbix_server_group }}"
+    state: directory
+  notify: Restart zabbix_server
+
+- name: Create zabbix_server.conf
+  template:
+    src: zabbix_server.conf.j2
+    dest: "{{ zabbix_server_conf_file }}"
+    validate: echo %s
+  notify: Restart zabbix_server
+
+- name: Start zabbix_server
+  service:
+    name: "{{ zabbix_server_service }}"
+    enabled: true
+    state: started

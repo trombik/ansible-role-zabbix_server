@@ -1,0 +1,6 @@
+---
+
+- name: Restart zabbix_server
+  service:
+    name: zabbix_server
+    state: restarted

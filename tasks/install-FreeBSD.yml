@@ -1,0 +1,6 @@
+---
+
+- name: Install zabbix_server
+  pkgng:
+    name: zabbix_server
+    state: present
