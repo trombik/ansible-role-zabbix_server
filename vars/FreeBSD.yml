@@ -1,3 +1,8 @@
 ---
-__zabbix_server_db_dir: /var/db/zabbix_server
-__zabbix_server_conf_dir: /usr/local/etc/zabbix_server
+__zabbix_server_user: zabbix
+__zabbix_server_group: zabbix
+__zabbix_server_service: zabbix_server
+__zabbix_server_package: net-mgmt/zabbix54-server
+__zabbix_server_conf_dir: /usr/local/etc/zabbix54
+__zabbix_server_conf_file: /usr/local/etc/zabbix54/zabbix_server.conf
+__zabbix_server_backend_database_dir: /usr/local/share/zabbix54/server/database

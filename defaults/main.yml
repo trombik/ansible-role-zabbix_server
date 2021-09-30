@@ -1,9 +1,23 @@
 ---
-zabbix_server_user: zabbix_server
-zabbix_server_group: zabbix_server
-zabbix_server_log_dir: /var/log/zabbix_server
+zabbix_server_user: "{{ __zabbix_server_user }}"
+zabbix_server_group: "{{ __zabbix_server_group }}"
 zabbix_server_db_dir: "{{ __zabbix_server_db_dir }}"
-zabbix_server_service: zabbix_server
+zabbix_server_service: "{{ __zabbix_server_service }}"
+zabbix_server_package: "{{ __zabbix_server_package }}"
+zabbix_server_extra_packages: []
 zabbix_server_conf_dir: "{{ __zabbix_server_conf_dir }}"
-zabbix_server_conf_file: "{{ __zabbix_server_conf_dir }}/zabbix_server.conf"
+zabbix_server_conf_file: "{{ __zabbix_server_conf_file }}"
 zabbix_server_flags: ""
+zabbix_server_backend_database: postgresql
+zabbix_server_backend_database_dir: "{{ __zabbix_server_backend_database_dir }}"
+zabbix_server_backend_database_sql_dir: "{{ zabbix_server_backend_database_dir }}/{{ zabbix_server_backend_database }}"
+zabbix_server_backend_database_name: zabbix
+zabbix_server_backend_database_user: zabbix
+zabbix_server_backend_database_host: localhost
+zabbix_server_backend_database_password: ""
+zabbix_server_listen_port: 10051
+zabbix_server_api_login_password: ""
+zabbix_server_api_login_password_hash: ""
+zabbix_server_api_login_user: api
+zabbix_server_api_server_url: http://localhost/zabbix/
+zabbix_server_users: []

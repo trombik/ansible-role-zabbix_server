@@ -1,29 +1,30 @@
 ---
 # tasks file for ansible-role-zabbix_server
 
-- include_vars: "{{ ansible_os_family }}.yml"
+- name: "Include {{ ansible_os_family }}.yml"
+  include_vars: "{{ ansible_os_family }}.yml"
 
-- include: "install-{{ ansible_os_family }}.yml"
+- name: "Include install-{{ ansible_os_family }}.yml"
+  include: "install-{{ ansible_os_family }}.yml"
 
-- name: Create log directory
-  file:
-    path: "{{ zabbix_server_log_dir }}"
-    mode: 0755
-    owner: "{{ zabbix_server_user }}"
-    group: "{{ zabbix_server_group }}"
-    state: directory
-  notify: Restart zabbix_server
+- name: See if the database exists
+  community.postgresql.postgresql_query:
+    db: "{{ zabbix_server_backend_database_name }}"
+    login_user: "{{ zabbix_server_backend_database_user }}"
+    login_host: "{{ zabbix_server_backend_database_host }}"
+    login_password: "{{ zabbix_server_backend_database_password }}"
+    query: SELECT 1
+  register: __zabbix_server_backend_database_exist
+  changed_when: false
+  failed_when: false
 
-- name: Create db directory
-  file:
-    path: "{{ zabbix_server_db_dir }}"
-    mode: 0755
-    owner: "{{ zabbix_server_user }}"
-    group: "{{ zabbix_server_group }}"
-    state: directory
-  notify: Restart zabbix_server
+- name: Include createdb.yml if database does not exist
+  ansible.builtin.include_tasks: createdb.yml
+  when:
+    - "'msg' in __zabbix_server_backend_database_exist"
+    - __zabbix_server_backend_database_exist.msg is search("FATAL:\s+database .* does not exist")
 
-- name: Create zabbix_server.conf
+- name: "Create {{ zabbix_server_conf_file }}"
   template:
     src: zabbix_server.conf.j2
     dest: "{{ zabbix_server_conf_file }}"
@@ -35,3 +36,32 @@
     name: "{{ zabbix_server_service }}"
     enabled: true
     state: started
+
+- name: Manage zabbix users
+  community.zabbix.zabbix_user:
+    after_login_url: "{{ item['after_login_url'] | default(omit) }}"
+    alias: "{{ item['alias'] }}"
+    autologin: "{{ item['autologin'] | default(omit) }}"
+    autologout: "{{ item['autologout'] | default(omit) }}"
+    http_login_password: "{{ item['http_login_password'] | default(omit) }}"
+    http_login_user: "{{ item['http_login_user'] | default(omit) }}"
+    lang: "{{ item['lang'] | default(omit) }}"
+    login_password: "{{ item['login_password'] | default(zabbix_server_api_login_password) }}"
+    login_user: "{{ item['login_user'] | default(zabbix_server_api_login_user) }}"
+    name: "{{ item['name'] | default(omit) }}"
+    override_passwd: "{{ item['override_passwd'] | default(omit) }}"
+    passwd: "{{ item['passwd'] | default(omit) }}"
+    refresh: "{{ item['refresh'] | default(omit) }}"
+    role_name: "{{ item['role_name'] | default(omit) }}"
+    rows_per_page: "{{ item['rows_per_page'] | default(omit) }}"
+    server_url: "{{ item['server_url'] | default(zabbix_server_api_server_url) }}"
+    state: "{{ item['state'] | default(omit) }}"
+    surname: "{{ item['surname'] | default(omit) }}"
+    theme: "{{ item['theme'] | default(omit) }}"
+    timeout: "{{ item['timeout'] | default(omit) }}"
+    timezone: "{{ item['timezone'] | default(omit) }}"
+    type: "{{ item['type'] | default(omit) }}"
+    user_medias: "{{ item['user_medias'] | default(omit) }}"
+    usrgrps: "{{ item['usrgrps'] | default(omit) }}"
+    validate_certs: "{{ item['validate_certs'] | default(omit) }}"
+  with_items: "{{ zabbix_server_users }}"

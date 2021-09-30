@@ -1,0 +1,12 @@
+---
+roles:
+  - name: trombik.nginx
+  - name: trombik.php_fpm
+  - name: trombik.sysctl
+  - name: trombik.freebsd_pkg_repo
+  - name: trombik.postgresql
+  - name: trombik.zabbix_agent
+  - name: trombik.zabbix_frontend
+collections:
+  - name: community.postgresql
+  - name: community.zabbix

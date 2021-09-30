@@ -1,0 +1,37 @@
+---
+
+- name: Crate the database
+  community.postgresql.postgresql_db:
+    db: "{{ zabbix_server_backend_database_name }}"
+    login_user: "{{ zabbix_server_backend_database_user }}"
+    login_host: "{{ zabbix_server_backend_database_host }}"
+    login_password: "{{ zabbix_server_backend_database_password }}"
+    owner: "{{ zabbix_server_backend_database_user }}"
+    encoding: Unicode
+
+- name: Crate the database from schema files
+  community.postgresql.postgresql_db:
+    db: "{{ zabbix_server_backend_database_name }}"
+    login_user: "{{ zabbix_server_backend_database_user }}"
+    login_host: "{{ zabbix_server_backend_database_host }}"
+    login_password: "{{ zabbix_server_backend_database_password }}"
+    target: "{{ zabbix_server_backend_database_sql_dir }}/{{ item }}"
+    state: restore
+  with_items:
+    - schema.sql
+    - images.sql
+    - data.sql
+
+- name: Create API user
+  community.postgresql.postgresql_query:
+    db: "{{ zabbix_server_backend_database_name }}"
+    login_user: "{{ zabbix_server_backend_database_user }}"
+    login_host: "{{ zabbix_server_backend_database_host }}"
+    login_password: "{{ zabbix_server_backend_database_password }}"
+    query: "INSERT INTO users (userid,username,name,surname,passwd,url,autologin,autologout,refresh,rows_per_page,roleid) values ('999',%s,'Zabbix','Administrator',%s,'','1','0','30s','50','3');"
+
+    # version 5.0.x
+    # query: "INSERT INTO users (userid,alias,name,surname,passwd,url,autologin,autologout,lang,refresh,type,theme,rows_per_page) values ('999', %s,'API login user','Administrator',%s,'','1','0','en_GB','30s','3','default','50');"
+    positional_args:
+      - "{{ zabbix_server_api_login_user }}"
+      - "{{ zabbix_server_api_login_password_hash }}"
