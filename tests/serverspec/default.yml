@@ -22,8 +22,6 @@
         url: "http://pkg.i.trombik.org/{{ ansible_distribution_version | regex_replace('\\.') }}{{ ansible_architecture }}-default-default"
         priority: 99
 
-    zabbix_server_package:
-      - zabbix54-server
     zabbix_server_extra_packages: []
     zabbix_server_backend_database_password: password
 
