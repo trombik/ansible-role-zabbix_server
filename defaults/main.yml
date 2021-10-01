@@ -18,5 +18,5 @@ zabbix_server_backend_database_password: ""
 zabbix_server_listen_port: 10051
 zabbix_server_api_login_password: ""
 zabbix_server_api_login_user: Admin
-zabbix_server_api_server_url: http://localhost/zabbix/
+zabbix_server_api_server_url: http://localhost/zabbix
 zabbix_server_users: []
