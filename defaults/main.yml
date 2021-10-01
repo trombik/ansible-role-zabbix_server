@@ -6,7 +6,7 @@ zabbix_server_service: "{{ __zabbix_server_service }}"
 zabbix_server_package: "{{ __zabbix_server_package }}"
 zabbix_server_extra_packages: []
 zabbix_server_conf_dir: "{{ __zabbix_server_conf_dir }}"
-zabbix_server_conf_file: "{{ __zabbix_server_conf_file }}"
+zabbix_server_conf_file: "{{ zabbix_server_conf_dir }}/zabbix_server.conf"
 zabbix_server_flags: ""
 zabbix_server_backend_database: postgresql
 zabbix_server_backend_database_dir: "{{ __zabbix_server_backend_database_dir }}"
