@@ -1,9 +1,5 @@
 ---
 - hosts: localhost
-  pre_tasks:
-    - name: Install git
-      pkgng:
-        name: git-lite
   roles:
     - role: trombik.sysctl
     - role: trombik.freebsd_pkg_repo
