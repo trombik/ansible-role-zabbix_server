@@ -1,6 +1,6 @@
 ---
 
-- name: Restart zabbix_server
+- name: Restart zabbix_server_service
   service:
-    name: zabbix_server
+    name: "{{ zabbix_server_service }}"
     state: restarted

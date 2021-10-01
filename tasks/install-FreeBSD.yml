@@ -18,3 +18,17 @@
     name: "{{ zabbix_server_extra_packages }}"
     pkgsite: local
     state: present
+
+- name: "Create /etc/rc.conf.d/{{ zabbix_server_service }}"
+  ansible.builtin.template:
+    src: FreeBSD.rcd.j2
+    dest: "/etc/rc.conf.d/{{ zabbix_server_service }}"
+    mode: "0644"
+    validate: sh -n %s
+  notify:
+    - Restart zabbix_server_service
+
+- name: Enable zabbix_server
+  service:
+    name: "{{ zabbix_server_service }}"
+    enabled: true

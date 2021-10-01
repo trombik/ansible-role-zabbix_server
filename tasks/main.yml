@@ -34,7 +34,6 @@
 - name: Start zabbix_server
   service:
     name: "{{ zabbix_server_service }}"
-    enabled: true
     state: started
 
 - name: Manage zabbix users
