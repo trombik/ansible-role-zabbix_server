@@ -34,12 +34,12 @@
     # XXX no trailing `/`
     zabbix_server_api_server_url: http://localhost
 
-    zabbix_server_api_login_password: api_password
+    # password hash can be created by:
     # <?php
     # $p = password_hash("api_password", PASSWORD_BCRYPT);
     # echo "$p\n"
     # ?>
-    zabbix_server_api_login_password_hash: $2y$10$RPOyH7L8qJYE9bd3s3FQ3O1xsaYXci97akE6ULk.L2ps0fEIAp.IO
+    zabbix_server_api_login_password: api_password
     zabbix_server_users:
       - alias: trombik
         name: Me

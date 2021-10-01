@@ -22,13 +22,13 @@
     - images.sql
     - data.sql
 
-- name: Set zabbix_server_api_login_password_hash
-  community.postgresql.postgresql_query:
-    db: "{{ zabbix_server_backend_database_name }}"
-    login_user: "{{ zabbix_server_backend_database_user }}"
-    login_host: "{{ zabbix_server_backend_database_host }}"
-    login_password: "{{ zabbix_server_backend_database_password }}"
-    # userid 1 is the default Admin user
-    query: "UPDATE users SET passwd = %s WHERE userid = 1"
-    positional_args:
-      - "{{ zabbix_server_api_login_password_hash }}"
+- name: Set zabbix_server_api_login_password
+  community.zabbix.zabbix_user:
+    passwd: "{{ zabbix_server_api_login_password }}"
+    alias: Admin
+    login_password: zabbix
+    login_user: Admin
+    server_url: "{{ zabbix_server_api_server_url }}"
+    override_passwd: yes
+    usrgrps:
+      - Zabbix administrators
