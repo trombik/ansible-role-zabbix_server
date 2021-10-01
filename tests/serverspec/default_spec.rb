@@ -53,3 +53,21 @@ ports.each do |p|
     it { should be_listening }
   end
 end
+
+api_url = "http://localhost:8000/api_jsonrpc.php"
+api_user = "Admin"
+api_password = "api_password"
+
+# zabbixapi gem does not support 5.4. as a result, cannot test tasks in the
+# role. see:
+# https://github.com/express42/zabbixapi/issues/110
+# require "zabbixapi"
+#
+# zbx =  ZabbixApi.connect(
+#   :url => api_url,
+#   :user => api_user,
+#   :password => api_password,
+#   :ignore_version => true,
+# )
+#
+# users = zbx.users.get_id(alias: "Admin")
