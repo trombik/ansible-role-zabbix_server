@@ -28,7 +28,9 @@
   template:
     src: zabbix_server.conf.j2
     dest: "{{ zabbix_server_conf_file }}"
-    validate: echo %s
+    mode: "0640"
+    owner: "{{ zabbix_server_user }}"
+    group: "{{ zabbix_server_group }}"
   notify: Restart zabbix_server
 
 - name: Start zabbix_server
