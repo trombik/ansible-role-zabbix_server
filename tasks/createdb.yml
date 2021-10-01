@@ -22,16 +22,13 @@
     - images.sql
     - data.sql
 
-- name: Create API user
+- name: Set zabbix_server_api_login_password_hash
   community.postgresql.postgresql_query:
     db: "{{ zabbix_server_backend_database_name }}"
     login_user: "{{ zabbix_server_backend_database_user }}"
     login_host: "{{ zabbix_server_backend_database_host }}"
     login_password: "{{ zabbix_server_backend_database_password }}"
-    query: "INSERT INTO users (userid,username,name,surname,passwd,url,autologin,autologout,refresh,rows_per_page,roleid) values ('999',%s,'Zabbix','Administrator',%s,'','1','0','30s','50','3');"
-
-    # version 5.0.x
-    # query: "INSERT INTO users (userid,alias,name,surname,passwd,url,autologin,autologout,lang,refresh,type,theme,rows_per_page) values ('999', %s,'API login user','Administrator',%s,'','1','0','en_GB','30s','3','default','50');"
+    # userid 1 is the default Admin user
+    query: "UPDATE users SET passwd = %s WHERE userid = 1"
     positional_args:
-      - "{{ zabbix_server_api_login_user }}"
       - "{{ zabbix_server_api_login_password_hash }}"
