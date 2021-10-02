@@ -1,14 +1,5 @@
 ---
 - hosts: localhost
-  pre_tasks:
-    # XXX update ca-certificates. the one on test virtual machine is old,
-    # which causes failure when adding apt repository
-    - name: Install ca-certificates
-      ansible.builtin.apt:
-        name: ca-certificates
-        update_cache: yes
-        state: latest
-      when: ansible_os_family == 'Debian'
   roles:
     - role: trombik.sysctl
     - role: trombik.freebsd_pkg_repo
