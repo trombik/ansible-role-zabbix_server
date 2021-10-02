@@ -3,7 +3,7 @@
 - name: Install py-zabbix-api
   # XXX available at https://github.com/trombik/freebsd-ports-py-zabbix-api
   ansible.builtin.pkgng:
-    name: py38-zabbix-api
+    name: "{{ zabbix_server_python_api_package }}"
     pkgsite: local
     state: present
 
@@ -26,7 +26,7 @@
     mode: "0644"
     validate: sh -n %s
   notify:
-    - Restart zabbix_server_service
+    - Restart zabbix_server
 
 - name: Enable zabbix_server
   ansible.builtin.service:

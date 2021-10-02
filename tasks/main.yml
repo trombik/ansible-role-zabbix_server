@@ -7,20 +7,22 @@
 - name: "Include install-{{ ansible_os_family }}.yml"
   include: "install-{{ ansible_os_family }}.yml"
 
-- name: See if the database exists
+- name: See if the database exists (postgresql)
   community.postgresql.postgresql_query:
     db: "{{ zabbix_server_backend_database_name }}"
     login_user: "{{ zabbix_server_backend_database_user }}"
     login_host: "{{ zabbix_server_backend_database_host }}"
     login_password: "{{ zabbix_server_backend_database_password }}"
     query: SELECT 1
+  when: zabbix_server_backend_database == 'postgresql'
   register: __zabbix_server_backend_database_exist
   changed_when: false
   failed_when: false
 
-- name: Include createdb.yml if database does not exist
-  ansible.builtin.include_tasks: createdb.yml
+- name: "Include createdb_postgresql.yml if database does not exist"
+  include_tasks: "createdb_postgresql.yml"
   when:
+    - zabbix_server_backend_database == 'postgresql'
     - "'msg' in __zabbix_server_backend_database_exist"
     - __zabbix_server_backend_database_exist.msg is search("FATAL:\s+database .* does not exist")
 
@@ -28,9 +30,7 @@
   ansible.builtin.template:
     src: zabbix_server.conf.j2
     dest: "{{ zabbix_server_conf_file }}"
-    mode: "0640"
-    owner: "{{ zabbix_server_user }}"
-    group: "{{ zabbix_server_group }}"
+    mode: "0600"
   notify: Restart zabbix_server
 
 - name: Start zabbix_server

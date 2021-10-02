@@ -1,8 +1,22 @@
 ---
 - hosts: localhost
+  pre_tasks:
+    # XXX update ca-certificates. the one on test virtual machine is old,
+    # which causes failure when adding apt repository
+    - name: Install ca-certificates
+      ansible.builtin.apt:
+        name: ca-certificates
+        update_cache: yes
+        state: latest
+      when: ansible_os_family == 'Debian'
   roles:
     - role: trombik.sysctl
     - role: trombik.freebsd_pkg_repo
+      when: ansible_os_family == 'FreeBSD'
+    - role: trombik.apt_repo
+      when: ansible_os_family == 'Debian'
+    - role: trombik.pip
+      when: ansible_os_family == 'Debian'
     - role: trombik.postgresql
     - role: trombik.zabbix_agent
     - role: trombik.nginx
@@ -22,7 +36,14 @@
         url: "http://pkg.i.trombik.org/{{ ansible_distribution_version | regex_replace('\\.') }}{{ ansible_architecture }}-default-default"
         priority: 99
 
-    zabbix_server_extra_packages: []
+    apt_repo_enable_apt_transport_https: yes
+    # https://repo.zabbix.com/zabbix/5.4/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.4-1+ubuntu20.04_all.deb
+    apt_repo_keys_to_add:
+      - https://repo.zabbix.com/zabbix-official-repo.key
+    apt_repo_to_add:
+      - "deb https://repo.zabbix.com/zabbix/5.4/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} main"
+      - "deb-src https://repo.zabbix.com/zabbix/5.4/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} main"
+
     zabbix_server_backend_database_password: password
 
     # XXX no trailing `/`
@@ -33,6 +54,8 @@
     # $p = password_hash("api_password", PASSWORD_BCRYPT);
     # echo "$p\n"
     # ?>
+    #
+    # this is the password of `Admin` user.
     zabbix_server_api_login_password: api_password
     zabbix_server_users:
       - alias: trombik
@@ -51,6 +74,7 @@
           - Zabbix administrators
     zabbix_server_config: |
       ListenPort={{ zabbix_server_listen_port }}
+      {% if ansible_os_family == 'FreeBSD' %}
       # XXX support log to file
       LogType=system
       DBHost={{ zabbix_server_backend_database_host }}
@@ -60,15 +84,44 @@
       Timeout=4
       LogSlowQueries=3000
       StatsAllowedIP=127.0.0.1
+      {% else %}
+      # Ubuntu's default
+      LogFile=/var/log/zabbix/zabbix_server.log
+      LogFileSize=0
+      PidFile=/run/zabbix/zabbix_server.pid
+      SocketDir=/run/zabbix
+      DBName={{ zabbix_server_backend_database_name }}
+      DBUser={{ zabbix_server_backend_database_user }}
+      DBHost={{ zabbix_server_backend_database_host }}
+      DBPassword={{ zabbix_server_backend_database_password }}
+      SNMPTrapperFile=/var/log/snmptrap/snmptrap.log
+      Timeout=4
+      FpingLocation=/usr/bin/fping
+      Fping6Location=/usr/bin/fping6
+      LogSlowQueries=3000
+      StatsAllowedIP=127.0.0.1
+      {% endif %}
 
     # _______________________________________________zabbix_agent
     zabbix_agent_config: |
+      {% if ansible_os_family == 'FreeBSD' %}
       LogType=system
       Server={{ zabbix_agent_server }}
       ListenPort={{ zabbix_agent_listen_port }}
       ListenIP={{ zabbix_agent_listen_ip }}
       ServerActive={{ zabbix_agent_server }}
       Hostname=Zabbix server
+      {% else %}
+      # Ubuntu's default
+      PidFile=/run/zabbix/zabbix_agentd.pid
+      LogFile=/var/log/zabbix/zabbix_agentd.log
+      LogFileSize=0
+      Server={{ zabbix_agent_server }}
+      ServerActive={{ zabbix_agent_server }}
+      Hostname=Zabbix server
+      Include=/etc/zabbix/zabbix_agentd.d/*.conf
+      {% endif %}
+
     # _______________________________________________postgresql
     postgresql_initial_password: password
     postgresql_debug: yes
@@ -185,7 +238,12 @@
 
     # _______________________________________________nginx
     # www_root_dir: "{% if ansible_os_family == 'FreeBSD' %}/usr/local/www/nginx{% elif ansible_os_family == 'OpenBSD' %}/var/www/htdocs{% elif ansible_os_family == 'Debian' %}/var/www/html{% elif ansible_os_family == 'RedHat' %}/usr/share/nginx/html{% endif %}"
-    www_root_dir: "{% if ansible_os_family == 'FreeBSD' %}/usr/local/www/zabbix54{% endif %}"
+
+    os_www_root_dir:
+      FreeBSD: /usr/local/www/zabbix54
+      Debian: /usr/share/zabbix
+
+    www_root_dir: "{{ os_www_root_dir[ansible_os_family] }}"
     nginx_flags: -q
     nginx_config: |
       {% if ansible_os_family == 'Debian' or ansible_os_family == 'RedHat' %}
@@ -250,7 +308,7 @@
 
     # _______________________________________________zabbix_frontend
     # default account: Admin
-    # default password: zabbix
+    # default password: see zabbix_server_api_login_password
     zabbix_frontend_config: |
       // Zabbix GUI configuration file.
 

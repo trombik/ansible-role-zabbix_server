@@ -7,6 +7,10 @@ roles:
   - name: trombik.postgresql
   - name: trombik.zabbix_agent
   - name: trombik.zabbix_frontend
+  - name: trombik.pip
+  - name: trombik.apt_repo
+  - name: trombik.pip
 collections:
   - name: community.postgresql
   - name: community.zabbix
+  - name: community.general

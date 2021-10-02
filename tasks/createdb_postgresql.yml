@@ -17,10 +17,7 @@
     login_password: "{{ zabbix_server_backend_database_password }}"
     target: "{{ zabbix_server_backend_database_sql_dir }}/{{ item }}"
     state: restore
-  with_items:
-    - schema.sql
-    - images.sql
-    - data.sql
+  with_items: "{{ zabbix_server_backend_database_sql_files }}"
 
 - name: Set zabbix_server_api_login_password
   community.zabbix.zabbix_user:

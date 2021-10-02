@@ -1,0 +1,23 @@
+---
+
+- name: Install py-zabbix-api
+  ansible.builtin.pip:
+    name: "{{ zabbix_server_python_api_package }}"
+    state: present
+
+- name: Install zabbix_server_package
+  ansible.builtin.apt:
+    name: "{{ zabbix_server_package }}"
+    policy_rc_d: 101
+    state: present
+
+- name: Install zabbix_server_extra_packages
+  ansible.builtin.apt:
+    name: "{{ zabbix_server_extra_packages }}"
+    policy_rc_d: 101
+    state: present
+
+- name: Enable zabbix_server
+  ansible.builtin.service:
+    name: "{{ zabbix_server_service }}"
+    enabled: true
