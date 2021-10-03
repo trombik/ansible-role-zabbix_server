@@ -13,7 +13,7 @@ ports   = [
   80,
   9000,
   10_050,
-  10_051,
+  10_051
 ]
 conf_dir = "/etc/zabbix"
 default_user = "root"
@@ -37,6 +37,14 @@ describe package(package) do
 end
 
 describe file(log_dir) do
+  it { should exist }
+  it { should be_directory }
+  it { should be_owned_by user }
+  it { should be_grouped_into group }
+  it { should be_mode 755 }
+end
+
+describe file(pid_dir) do
   it { should exist }
   it { should be_directory }
   it { should be_owned_by user }
