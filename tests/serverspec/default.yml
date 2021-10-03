@@ -65,32 +65,28 @@
           - Zabbix administrators
     zabbix_server_config: |
       ListenPort={{ zabbix_server_listen_port }}
+      DBHost={{ zabbix_server_backend_database_host }}
+      DBName={{ zabbix_server_backend_database_name }}
+      DBUser={{ zabbix_server_backend_database_user }}
+      DBPassword={{ zabbix_server_backend_database_password }}
+      LogSlowQueries=3000
+      StatsAllowedIP=127.0.0.1
+      SocketDir={{ zabbix_server_socket_dir }}
+      Timeout=4
+
       {% if ansible_os_family == 'FreeBSD' %}
       # XXX support log to file
       LogType=system
-      DBHost={{ zabbix_server_backend_database_host }}
-      DBName={{ zabbix_server_backend_database_name }}
-      DBUser={{ zabbix_server_backend_database_user }}
-      DBPassword={{ zabbix_server_backend_database_password }}
-      Timeout=4
-      LogSlowQueries=3000
-      StatsAllowedIP=127.0.0.1
+      FpingLocation=/usr/local/sbin/fping
+      Fping6Location=/usr/local/sbin/fping6
       {% else %}
       # Ubuntu's default
-      LogFile=/var/log/zabbix/zabbix_server.log
+      LogFile={{ zabbix_server_log_file }}
       LogFileSize=0
-      PidFile=/run/zabbix/zabbix_server.pid
-      SocketDir=/run/zabbix
-      DBName={{ zabbix_server_backend_database_name }}
-      DBUser={{ zabbix_server_backend_database_user }}
-      DBHost={{ zabbix_server_backend_database_host }}
-      DBPassword={{ zabbix_server_backend_database_password }}
+      PidFile={{ zabbix_server_pid_file }}
       SNMPTrapperFile=/var/log/snmptrap/snmptrap.log
-      Timeout=4
       FpingLocation=/usr/bin/fping
       Fping6Location=/usr/bin/fping6
-      LogSlowQueries=3000
-      StatsAllowedIP=127.0.0.1
       {% endif %}
 
     # _______________________________________________zabbix_agent

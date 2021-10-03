@@ -3,8 +3,12 @@ require "serverspec"
 
 package = "zabbix-server-pgsql"
 service = "zabbix-server"
-# user    = "zabbix"
-# group   = "zabbix"
+log_dir = "/var/log/zabbix"
+pid_dir = "/run/zabbix"
+socket_dir = "/run/zabbix"
+externalscripts_dir = "/usr/lib/zabbix/externalscripts"
+user    = "zabbix"
+group   = "zabbix"
 ports   = [
   80,
   9000,
@@ -21,11 +25,47 @@ when "freebsd"
   conf_dir = "/usr/local/etc/zabbix54"
   default_group = "wheel"
   service = "zabbix_server"
+  pid_dir = "/var/run/zabbix"
+  socket_dir = "/var/run/zabbix"
+  externalscripts_dir = "/usr/local/etc/externalscripts"
 end
+
 config = "#{conf_dir}/zabbix_server.conf"
 
 describe package(package) do
   it { should be_installed }
+end
+
+describe file(log_dir) do
+  it { should exist }
+  it { should be_directory }
+  it { should be_owned_by user }
+  it { should be_grouped_into group }
+  it { should be_mode 755 }
+end
+
+describe file(socket_dir) do
+  it { should exist }
+  it { should be_directory }
+  it { should be_owned_by user }
+  it { should be_grouped_into group }
+  it { should be_mode 755 }
+end
+
+describe file(log_dir) do
+  it { should exist }
+  it { should be_directory }
+  it { should be_owned_by user }
+  it { should be_grouped_into group }
+  it { should be_mode 755 }
+end
+
+describe file(externalscripts_dir) do
+  it { should exist }
+  it { should be_directory }
+  it { should be_owned_by default_user }
+  it { should be_grouped_into default_group }
+  it { should be_mode 755 }
 end
 
 describe file(config) do

@@ -11,3 +11,7 @@ __zabbix_server_backend_database_sql_files:
   - images.sql
   - data.sql
 __zabbix_server_python_api_package: py38-zabbix-api
+__zabbix_server_log_dir: /var/log/zabbix
+__zabbix_server_pid_dir: /var/run/zabbix
+__zabbix_server_socket_dir: /var/run/zabbix
+__zabbix_server_externalscripts_dir: /usr/local/etc/externalscripts

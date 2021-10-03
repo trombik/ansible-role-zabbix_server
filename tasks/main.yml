@@ -7,6 +7,36 @@
 - name: "Include install-{{ ansible_os_family }}.yml"
   include: "install-{{ ansible_os_family }}.yml"
 
+- name: Create zabbix_server_socket_dir
+  ansible.builtin.file:
+    path: "{{ zabbix_server_socket_dir }}"
+    owner: "{{ zabbix_server_user }}"
+    group: "{{ zabbix_server_group }}"
+    mode: '0755'
+    state: directory
+
+- name: Create zabbix_server_pid_dir
+  ansible.builtin.file:
+    path: "{{ zabbix_server_pid_dir }}"
+    owner: "{{ zabbix_server_user }}"
+    group: "{{ zabbix_server_group }}"
+    mode: '0755'
+    state: directory
+
+- name: Create zabbix_server_log_dir
+  ansible.builtin.file:
+    path: "{{ zabbix_server_log_dir }}"
+    owner: "{{ zabbix_server_user }}"
+    group: "{{ zabbix_server_group }}"
+    mode: '0755'
+    state: directory
+
+- name: Create zabbix_server_externalscripts_dir
+  ansible.builtin.file:
+    path: "{{ zabbix_server_externalscripts_dir }}"
+    mode: '0755'
+    state: directory
+
 - name: See if the database exists (postgresql)
   community.postgresql.postgresql_query:
     db: "{{ zabbix_server_backend_database_name }}"
