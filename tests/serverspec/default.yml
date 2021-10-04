@@ -48,6 +48,13 @@
     #
     # this is the password of `Admin` user.
     zabbix_server_api_login_password: api_password
+    zabbix_server_usergroups:
+      - name: Developers
+        debug_mode: enabled
+        rights:
+          - host_group: Linux servers
+            permission: read-write
+        state: present
     zabbix_server_users:
       - alias: trombik
         name: Me
@@ -56,6 +63,7 @@
         type: Zabbix admin
         usrgrps:
           - Guests
+          - Developers
       - alias: root
         name: Root
         surname: Surname

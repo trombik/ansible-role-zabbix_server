@@ -20,6 +20,7 @@ zabbix_server_api_login_password: ""
 zabbix_server_api_login_user: Admin
 zabbix_server_api_server_url: http://localhost/zabbix
 zabbix_server_users: []
+zabbix_server_usergroups: []
 zabbix_server_backend_database_sql_files: "{{ __zabbix_server_backend_database_sql_files }}"
 zabbix_server_python_api_package: "{{ __zabbix_server_python_api_package }}"
 zabbix_server_log_dir: "{{ __zabbix_server_log_dir }}"
