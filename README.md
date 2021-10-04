@@ -1,8 +1,11 @@
 # `trombik.zabbix_server`
 
-Manage `zabbix` server.
+Manage `zabbix` server. The role manages users, user groups, and discovery
+rules. Other `zabbix` resources should be managed by your own roles.
 
 ## Notes for all users
+
+The role does not support TLS.
 
 The role does not support `MySQL`.
 
