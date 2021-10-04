@@ -10,10 +10,10 @@
       when: ansible_os_family == 'Debian' or ansible_os_family == 'OpenBSD'
     - role: trombik.postgresql
     - role: trombik.zabbix_agent
+    - role: trombik.zabbix_frontend
     - role: trombik.nginx
     # XXX zabbix_server uses APIs. the frontend must be configured
     # before server
-    - role: trombik.zabbix_frontend
     - role: trombik.php_fpm
     - ansible-role-zabbix_server
   vars:
@@ -77,7 +77,6 @@
       LogFileSize=0
 
       {% if ansible_os_family == 'FreeBSD' or ansible_os_family == 'OpenBSD' %}
-      # XXX support log to file
       FpingLocation=/usr/local/sbin/fping
       Fping6Location=/usr/local/sbin/fping6
       {% else %}
@@ -217,14 +216,6 @@
     postgresql_flags: "{{ os_postgresql_flags[ansible_os_family] }}"
 
     # _______________________________________________nginx
-    # www_root_dir: "{% if ansible_os_family == 'FreeBSD' %}/usr/local/www/nginx{% elif ansible_os_family == 'OpenBSD' %}/var/www/htdocs{% elif ansible_os_family == 'Debian' %}/var/www/html{% elif ansible_os_family == 'RedHat' %}/usr/share/nginx/html{% endif %}"
-
-    os_www_root_dir:
-      FreeBSD: /usr/local/www/zabbix54
-      Debian: /usr/share/zabbix
-      OpenBSD: /var/www/zabbix
-
-    www_root_dir: "{{ os_www_root_dir[ansible_os_family] }}"
     nginx_flags: -q
     nginx_config: |
       {% if ansible_os_family == 'Debian' or ansible_os_family == 'RedHat' %}
@@ -246,7 +237,7 @@
         server {
           listen 80;
           server_name localhost;
-          root {{ www_root_dir }};
+          root {{ zabbix_frontend_web_root }};
           location / {
             index index.html index.php;
           }
