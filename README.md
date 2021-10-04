@@ -21,6 +21,9 @@ use any other roles.
 
 ## Notes for FreeBSD users
 
+`net-mgmt/zabbix54-server` in the official FreeBSD package tree is built with
+`MySQL`. You need to build your own with `PostgreSQL` option enabled.
+
 The role does not work out of box because `zabbix-api` port is not in the
 official FreeBSD ports tree. My `py-zabbix-api` is available at
 [`trombik/freebsd-ports-py-zabbix-api`](https://github.com/trombik/freebsd-ports-py-zabbix-api).
