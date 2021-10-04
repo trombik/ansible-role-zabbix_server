@@ -23,7 +23,7 @@ zabbix_server_users: []
 zabbix_server_backend_database_sql_files: "{{ __zabbix_server_backend_database_sql_files }}"
 zabbix_server_python_api_package: "{{ __zabbix_server_python_api_package }}"
 zabbix_server_log_dir: "{{ __zabbix_server_log_dir }}"
-zabbix_server_log_file: "{{ zabbix_server_log_dir }}/zabbix_agentd.log"
+zabbix_server_log_file: "{{ zabbix_server_log_dir }}/zabbix_server.log"
 zabbix_server_pid_dir: "{{ __zabbix_server_pid_dir }}"
 zabbix_server_pid_file: "{{ zabbix_server_pid_dir }}/zabbix_server.pid"
 zabbix_server_socket_dir: "{{ __zabbix_server_socket_dir }}"
