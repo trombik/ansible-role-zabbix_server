@@ -7,7 +7,7 @@
     - role: trombik.apt_repo
       when: ansible_os_family == 'Debian'
     - role: trombik.pip
-      when: ansible_os_family == 'Debian'
+      when: ansible_os_family == 'Debian' or ansible_os_family == 'OpenBSD'
     - role: trombik.postgresql
     - role: trombik.zabbix_agent
     - role: trombik.nginx
@@ -73,16 +73,15 @@
       StatsAllowedIP=127.0.0.1
       SocketDir={{ zabbix_server_socket_dir }}
       Timeout=4
+      LogFile={{ zabbix_server_log_file }}
+      LogFileSize=0
 
-      {% if ansible_os_family == 'FreeBSD' %}
+      {% if ansible_os_family == 'FreeBSD' or ansible_os_family == 'OpenBSD' %}
       # XXX support log to file
-      LogType=system
       FpingLocation=/usr/local/sbin/fping
       Fping6Location=/usr/local/sbin/fping6
       {% else %}
       # Ubuntu's default
-      LogFile={{ zabbix_server_log_file }}
-      LogFileSize=0
       PidFile={{ zabbix_server_pid_file }}
       SNMPTrapperFile=/var/log/snmptrap/snmptrap.log
       FpingLocation=/usr/bin/fping
@@ -91,23 +90,19 @@
 
     # _______________________________________________zabbix_agent
     zabbix_agent_config: |
-      {% if ansible_os_family == 'FreeBSD' %}
-      LogType=system
       Server={{ zabbix_agent_server }}
       ListenPort={{ zabbix_agent_listen_port }}
       ListenIP={{ zabbix_agent_listen_ip }}
       ServerActive={{ zabbix_agent_server }}
       Hostname=Zabbix server
-      {% else %}
-      # Ubuntu's default
-      PidFile=/run/zabbix/zabbix_agentd.pid
-      LogFile=/var/log/zabbix/zabbix_agentd.log
       LogFileSize=0
-      Server={{ zabbix_agent_server }}
-      ServerActive={{ zabbix_agent_server }}
-      Hostname=Zabbix server
-      Include=/etc/zabbix/zabbix_agentd.d/*.conf
+      LogFile={{ zabbix_agent_log_file }}
+
+      {% if ansible_os_family == 'Debian' %}
+      PidFile={{ zabbix_agent_pid_file }}
       {% endif %}
+
+      Include={{ zabbix_agent_conf_d_dir }}/*.conf
 
     # _______________________________________________postgresql
     postgresql_initial_password: password
@@ -115,8 +110,18 @@
     os_sysctl:
       FreeBSD: {}
       OpenBSD:
+        # for postgresql
         kern.seminfo.semmni: 60
         kern.seminfo.semmns: 1024
+
+        # zabbix server fails to start:
+        # cannot initialize configuration cache: cannot get private shared
+        # memory of size 8388608 for configuration cache: [12] Cannot allocate
+        # memory
+        #
+        # cannot initialize database cache: cannot get private shared memory
+        # of size 16777216 for history cache
+        kern.shminfo.shmmax: 51200000
       Debian: {}
       RedHat: {}
     sysctl: "{{ os_sysctl[ansible_os_family] }}"
@@ -229,6 +234,7 @@
     os_www_root_dir:
       FreeBSD: /usr/local/www/zabbix54
       Debian: /usr/share/zabbix
+      OpenBSD: /var/www/zabbix
 
     www_root_dir: "{{ os_www_root_dir[ansible_os_family] }}"
     nginx_flags: -q
@@ -265,7 +271,12 @@
             fastcgi_param HTTP_PROXY "";
             fastcgi_pass 127.0.0.1:9000;
             fastcgi_index index.php;
+            {% if ansible_os_family == 'OpenBSD' %}
+            # XXX nginx on OpenBSD chroot's in /var/www
+            fastcgi_param SCRIPT_FILENAME /var/www$document_root$fastcgi_script_name;
+            {% else %}
             fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+            {% endif %}
             fastcgi_intercept_errors on;
             include {{ nginx_conf_dir }}/fastcgi_params;
           }
@@ -415,6 +426,14 @@
       post_max_size = 16M
       max_execution_time = 300
       max_input_time = 300
+
+      {% if ansible_os_family == 'OpenBSD' %}
+      date.timezone = "UTC"
+      extension=gd.so
+      extension=pgsql.so
+      extension=xsl.so
+      extension=zip.so
+      {% endif %}
 
       [CLI Server]
       cli_server.color = On

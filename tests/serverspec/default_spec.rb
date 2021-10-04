@@ -27,7 +27,17 @@ when "freebsd"
   service = "zabbix_server"
   pid_dir = "/var/run/zabbix"
   socket_dir = "/var/run/zabbix"
-  externalscripts_dir = "/usr/local/etc/externalscripts"
+  externalscripts_dir = "#{conf_dir}/externalscripts"
+when "openbsd"
+  user = "_zabbix"
+  group = "_zabbix"
+  package = "zabbix-server-5.0.10-pgsql"
+  conf_dir = "/etc/zabbix"
+  default_group = "wheel"
+  service = "zabbix_server"
+  pid_dir = "/var/run/zabbix"
+  socket_dir = "/var/run/zabbix"
+  externalscripts_dir = "#{conf_dir}/externalscripts"
 end
 
 config = "#{conf_dir}/zabbix_server.conf"
@@ -42,6 +52,14 @@ describe file(log_dir) do
   it { should be_owned_by user }
   it { should be_grouped_into group }
   it { should be_mode 755 }
+end
+
+describe file("#{log_dir}/zabbix_server.log") do
+  it { should exist }
+  it { should be_file }
+  it { should be_mode 664 }
+  it { should be_owned_by user }
+  it { should be_grouped_into group }
 end
 
 describe file(pid_dir) do
@@ -81,7 +99,12 @@ describe file(config) do
   it { should be_file }
   it { should be_mode 600 }
   it { should be_owned_by default_user }
-  it { should be_grouped_into default_group }
+  case os[:family]
+  when "openbsd"
+    it { should be_grouped_into group }
+  else
+    it { should be_grouped_into default_group }
+  end
   its(:content) { should match Regexp.escape("Managed by ansible") }
 end
 

@@ -1,0 +1,22 @@
+---
+
+- name: Install py-zabbix-api
+  # XXX probably, not a good idea. create a package instead
+  ansible.builtin.pip:
+    name: "{{ zabbix_server_python_api_package }}"
+    state: present
+
+- name: Install zabbix_server_package
+  community.general.openbsd_pkg:
+    name: "{{ zabbix_server_package }}"
+    state: present
+
+- name: Install zabbix_server_extra_packages
+  community.general.openbsd_pkg:
+    name: "{{ zabbix_server_extra_packages }}"
+    state: present
+
+- name: Enable zabbix_server
+  ansible.builtin.service:
+    name: "{{ zabbix_server_service }}"
+    enabled: true
