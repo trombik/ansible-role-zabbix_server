@@ -1,10 +1,31 @@
-# ansible-role-zabbix_server
+# `trombik.zabbix_server`
 
-A brief description of the role goes here.
+Manage `zabbix` server.
+
+## Notes for all users
+
+The role does not support `MySQL`.
+
+The role overrides the default login password of `Admin`, which can be
+controlled by `zabbix_server_api_login_password`.
+
+## Notes for FreeBSD users
+
+The role does not work out of box because `zabbix-api` port is not in the
+official FreeBSD ports tree. My `py-zabbix-api` is available at
+[`trombik/freebsd-ports-py-zabbix-api`](https://github.com/trombik/freebsd-ports-py-zabbix-api).
+
+## Notes for Debian users
+
+The role installs `py-zabbix-api` with `pip` as root.
+
+## Notes for OpenBSD users
+
+The role installs `py-zabbix-api` with `pip` as root.
 
 # Requirements
 
-None
+The roles requires `ansible` collections. See [`requirements.yml`](requirements.yml).
 
 # Role Variables
 
