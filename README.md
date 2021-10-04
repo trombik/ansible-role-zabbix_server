@@ -3,6 +3,10 @@
 Manage `zabbix` server. The role manages users, user groups, and discovery
 rules. Other `zabbix` resources should be managed by your own roles.
 
+`zabbix` resources are managed by `zabbix` user `Admin`. If this is a concern,
+create an API user, and use that user in your role. The role has all access,
+including access to the database.
+
 ## Notes for all users
 
 The role does not support TLS.
@@ -44,6 +48,9 @@ The roles requires `ansible` collections. See [`requirements.yml`](requirements.
 None
 
 # Example Playbook
+
+The example creates `zabbix` server with `zabbix` agent, including web UI and
+the database.
 
 ```yaml
 ---
