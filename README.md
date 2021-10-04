@@ -93,6 +93,13 @@ None
     #
     # this is the password of `Admin` user.
     zabbix_server_api_login_password: api_password
+    zabbix_server_usergroups:
+      - name: Developers
+        debug_mode: enabled
+        rights:
+          - host_group: Linux servers
+            permission: read-write
+        state: present
     zabbix_server_users:
       - alias: trombik
         name: Me
@@ -101,6 +108,7 @@ None
         type: Zabbix admin
         usrgrps:
           - Guests
+          - Developers
       - alias: root
         name: Root
         surname: Surname
@@ -108,6 +116,17 @@ None
         type: Zabbix super admin
         usrgrps:
           - Zabbix administrators
+    zabbix_server_discovery_rules:
+      - name: LAN
+        iprange: 192.168.1.1-255
+        dchecks:
+          - type: ICMP
+          - type: Zabbix
+            key: "system.hostname"
+            ports: 10050
+            uniq: yes
+            host_source: "discovery"
+        status: enabled
     zabbix_server_config: |
       ListenPort={{ zabbix_server_listen_port }}
       DBHost={{ zabbix_server_backend_database_host }}
