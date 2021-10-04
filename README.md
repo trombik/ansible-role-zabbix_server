@@ -9,6 +9,9 @@ The role does not support `MySQL`.
 The role overrides the default login password of `Admin`, which can be
 controlled by `zabbix_server_api_login_password`.
 
+The example uses many my `ansible` roles, but they are all optional. You may
+use any other roles.
+
 ## Notes for FreeBSD users
 
 The role does not work out of box because `zabbix-api` port is not in the
