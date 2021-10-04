@@ -114,3 +114,21 @@
     usrgrps: "{{ item['usrgrps'] | default(omit) }}"
     validate_certs: "{{ item['validate_certs'] | default(omit) }}"
   with_items: "{{ zabbix_server_users }}"
+
+- name: Manage discovery rules
+  community.zabbix.zabbix_discovery_rule:
+    dchecks: "{{ item['dchecks'] | default(omit) }}"
+    delay: "{{ item['delay'] | default(omit) }}"
+    http_login_password: "{{ item['http_login_password'] | default(omit) }}"
+    http_login_user: "{{ item['http_login_user'] | default(omit) }}"
+    iprange: "{{ item['iprange'] | default(omit) }}"
+    login_password: "{{ item['login_password'] | default(zabbix_server_api_login_password) }}"
+    login_user: "{{ item['login_user'] | default(zabbix_server_api_login_user) }}"
+    name: "{{ item['name'] }}"
+    proxy: "{{ item['proxy'] | default(omit) }}"
+    server_url: "{{ item['server_url'] | default(zabbix_server_api_server_url) }}"
+    state: "{{ item['state'] | default(omit) }}"
+    status: "{{ item['status'] | default(omit) }}"
+    timeout: "{{ item['timeout'] | default(omit) }}"
+    validate_certs: "{{ item['validate_certs'] | default(omit) }}"
+  with_items: "{{ zabbix_server_discovery_rules }}"
