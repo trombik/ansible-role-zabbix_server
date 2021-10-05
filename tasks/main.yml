@@ -105,6 +105,15 @@
     - "'msg' in __zabbix_server_backend_database_exist"
     - __zabbix_server_backend_database_exist.msg is search("FATAL:\s+database .* does not exist")
 
+- name: Set allowed encryption methods of zabbix agent on the server
+  community.zabbix.zabbix_host:
+    server_url: "{{ zabbix_server_api_server_url }}"
+    login_password: "{{ zabbix_server_api_login_password }}"
+    login_user: "{{ zabbix_server_api_login_user }}"
+    host_name: "{{ zabbix_server_agent_host_name }}"
+    tls_accept: "{{ zabbix_server_agent_tls_accept }}"
+    tls_connect: "{{ zabbix_server_agent_tls_connect }}"
+
 - name: "Create {{ zabbix_server_conf_file }}"
   ansible.builtin.template:
     src: zabbix_server.conf.j2

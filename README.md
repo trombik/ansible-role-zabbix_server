@@ -9,8 +9,6 @@ including access to the database.
 
 ## Notes for all users
 
-The role does not support TLS.
-
 The role does not support `MySQL`.
 
 The role overrides the default login password of `Admin`, which can be
@@ -35,6 +33,49 @@ The role installs `py-zabbix-api` with `pip` as root.
 ## Notes for OpenBSD users
 
 The role installs `py-zabbix-api` with `pip` as root.
+
+## TLS
+
+Supported TLS encryption includes:
+
+* TLS between `zabbix` agent and `zabbix` server with certificates
+
+The role manages encryption setting of `zabbix` agent on the `zabbix` server.
+See `zabbix_server_agent_tls_accept` and `zabbix_server_agent_tls_connect`. No
+encryption is the default.
+
+### TLS between `zabbix` agent and `zabbix` server with certificates
+
+To enable TLS, you need:
+
+* Two public keys (root CA and host's public key signed by the CA)
+* A private key of the host
+
+The public and private keys in the example were created by the following
+commands.
+
+```console
+openssl genrsa -aes256 -out ca.key 4096
+openssl req -x509 -new -key ca.key -sha256 -days 3560 -out ca.pub
+openssl genrsa -out server.key 2048
+openssl req -new -key server.key -out server.csr
+openssl x509 -req -in server.csr -CA ca.pub -CAkey ca.key -CAcreateserial -out server.pub -days 3650 -sha256
+```
+
+`ca.pub` is the public key of the CA. Both the agent and the server needs it.
+
+`server.pub` is the public key of the server. `server.key` is the private key
+of the server.
+
+`ca.key` is the private key of the CA. You need this to sign other signing
+request. The role does not use it.
+
+`server.csr` is a signing request. The role does not use it.
+
+To distribute keys, the example uses `trombik.x509_certificate`. However, you
+may use other means. It is `trombik.zabbix_agent` `ansible` role that calls
+`trombik.x509_certificate`. This role does not directly use
+`trombik.x509_certificate`.
 
 # Requirements
 

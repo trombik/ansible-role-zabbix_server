@@ -9,6 +9,7 @@ roles:
   - name: trombik.zabbix_frontend
   - name: trombik.pip
   - name: trombik.apt_repo
+  - name: trombik.x509_certificate
 collections:
   - name: community.postgresql
   - name: community.zabbix
