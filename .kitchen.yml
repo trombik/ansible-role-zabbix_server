@@ -43,7 +43,7 @@ platforms:
       ssh:
         shell: '/bin/sh'
       network:
-        - ["forwarded_port", {guest: 80, host: 8002}]
+        - ["forwarded_port", {guest: 80, host: 8001}]
     provisioner:
       extra_vars:
         ansible_python_interpreter: '/usr/local/bin/python3'
@@ -54,7 +54,18 @@ platforms:
       box_check_update: false
     driver_config:
       network:
-        - ["forwarded_port", {guest: 80, host: 8001}]
+        - ["forwarded_port", {guest: 80, host: 8002}]
+    provisioner:
+      extra_vars:
+        ansible_python_interpreter: '/usr/bin/python3'
+
+  - name: devuan-3-amd64
+    driver:
+      box: trombik/ansible-devuan-3-amd64
+      box_check_update: false
+    driver_config:
+      network:
+        - ["forwarded_port", {guest: 80, host: 8003}]
     provisioner:
       extra_vars:
         ansible_python_interpreter: '/usr/bin/python3'
