@@ -41,6 +41,11 @@ when "openbsd"
 end
 
 config = "#{conf_dir}/zabbix_server.conf"
+ca_pub = "#{conf_dir}/cert/ca.pub"
+server_pub = "#{conf_dir}/cert/server.pub"
+server_key = "#{conf_dir}/cert/server.key"
+agent_pub = "#{conf_dir}/cert/agent.pub"
+agent_key = "#{conf_dir}/cert/agent.key"
 
 describe package(package) do
   it { should be_installed }
@@ -60,6 +65,7 @@ describe file("#{log_dir}/zabbix_server.log") do
   it { should be_mode 664 }
   it { should be_owned_by user }
   it { should be_grouped_into group }
+  its(:content) { should match(/TLS support:\s+YES/) }
 end
 
 describe file(pid_dir) do
@@ -138,6 +144,51 @@ describe file "#{externalscripts_dir}/test.sh" do
   it { should be_owned_by user }
   it { should be_grouped_into group }
   its(:content) { should match(/# Test external script/) }
+end
+
+describe file ca_pub do
+  it { should exist }
+  it { should be_file }
+  it { should be_mode 644 }
+  it { should be_owned_by user }
+  it { should be_grouped_into group }
+  its(:content) { should match(/BEGIN CERTIFICATE/) }
+end
+
+describe file agent_pub do
+  it { should exist }
+  it { should be_file }
+  it { should be_mode 644 }
+  it { should be_owned_by user }
+  it { should be_grouped_into group }
+  its(:content) { should match(/BEGIN CERTIFICATE/) }
+end
+
+describe file agent_key do
+  it { should exist }
+  it { should be_file }
+  it { should be_mode 600 }
+  it { should be_owned_by user }
+  it { should be_grouped_into group }
+  its(:content) { should match(/BEGIN RSA PRIVATE KEY/) }
+end
+
+describe file server_pub do
+  it { should exist }
+  it { should be_file }
+  it { should be_mode 644 }
+  it { should be_owned_by user }
+  it { should be_grouped_into group }
+  its(:content) { should match(/BEGIN CERTIFICATE/) }
+end
+
+describe file server_key do
+  it { should exist }
+  it { should be_file }
+  it { should be_mode 600 }
+  it { should be_owned_by user }
+  it { should be_grouped_into group }
+  its(:content) { should match(/BEGIN RSA PRIVATE KEY/) }
 end
 
 describe file "#{externalscripts_dir}/remove_me.sh" do
