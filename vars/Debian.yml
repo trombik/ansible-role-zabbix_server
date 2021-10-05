@@ -6,7 +6,7 @@ __zabbix_server_package: zabbix-server-pgsql
 __zabbix_server_extra_packages:
   - zabbix-sql-scripts
 __zabbix_server_conf_dir: /etc/zabbix
-__zabbix_server_backend_database_base_dir: /usr/share/doc/zabbix-sql-scripts
+__zabbix_server_backend_database_sql_base_dir: /usr/share/doc/zabbix-sql-scripts
 __zabbix_server_backend_database_sql_files:
   - create.sql.gz
 __zabbix_server_python_api_package: zabbix-api

@@ -5,7 +5,7 @@ __zabbix_server_service: zabbix_server
 __zabbix_server_package: net-mgmt/zabbix54-server
 __zabbix_server_extra_packages: []
 __zabbix_server_conf_dir: /usr/local/etc/zabbix54
-__zabbix_server_backend_database_base_dir: /usr/local/share/zabbix54/server/database
+__zabbix_server_backend_database_sql_base_dir: /usr/local/share/zabbix54/server/database
 __zabbix_server_backend_database_sql_files:
   - schema.sql
   - images.sql

@@ -9,8 +9,8 @@ zabbix_server_conf_dir: "{{ __zabbix_server_conf_dir }}"
 zabbix_server_conf_file: "{{ zabbix_server_conf_dir }}/zabbix_server.conf"
 zabbix_server_flags: ""
 zabbix_server_backend_database: postgresql
-zabbix_server_backend_database_base_dir: "{{ __zabbix_server_backend_database_base_dir }}"
-zabbix_server_backend_database_sql_dir: "{{ zabbix_server_backend_database_base_dir }}/{{ zabbix_server_backend_database }}"
+zabbix_server_backend_database_sql_base_dir: "{{ __zabbix_server_backend_database_sql_base_dir }}"
+zabbix_server_backend_database_sql_dir: "{{ zabbix_server_backend_database_sql_base_dir }}/{{ zabbix_server_backend_database }}"
 zabbix_server_backend_database_name: zabbix
 zabbix_server_backend_database_user: zabbix
 zabbix_server_backend_database_host: localhost

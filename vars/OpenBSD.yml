@@ -5,7 +5,7 @@ __zabbix_server_service: zabbix_server
 __zabbix_server_package: zabbix-server--pgsql
 __zabbix_server_extra_packages: []
 __zabbix_server_conf_dir: /etc/zabbix
-__zabbix_server_backend_database_base_dir: /usr/local/share/zabbix-server/schema
+__zabbix_server_backend_database_sql_base_dir: /usr/local/share/zabbix-server/schema
 __zabbix_server_backend_database_sql_files:
   - schema.sql
   - images.sql
