@@ -131,6 +131,19 @@ ports.each do |p|
   end
 end
 
+describe file "#{externalscripts_dir}/test.sh" do
+  it { should exist }
+  it { should be_file }
+  it { should be_mode 755 }
+  it { should be_owned_by user }
+  it { should be_grouped_into group }
+  its(:content) { should match(/# Test external script/) }
+end
+
+describe file "#{externalscripts_dir}/remove_me.sh" do
+  it { should_not exist }
+end
+
 # zabbixapi gem does not support 5.4. as a result, cannot test tasks in the
 # role. see:
 # https://github.com/express42/zabbixapi/issues/110

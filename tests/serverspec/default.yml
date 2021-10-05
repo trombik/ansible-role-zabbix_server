@@ -105,6 +105,18 @@
       Fping6Location=/usr/bin/fping6
       {% endif %}
 
+    zabbix_server_externalscripts_files:
+      - name: test.sh
+        content: |
+          #!/bin/sh
+          # Test external script
+          echo 1
+          exit 0
+        validate: sh -n %s
+        state: present
+      - name: remove_me.sh
+        state: absent
+
     # _______________________________________________zabbix_agent
     zabbix_agent_config: |
       Server={{ zabbix_agent_server }}

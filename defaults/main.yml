@@ -30,3 +30,4 @@ zabbix_server_pid_dir: "{{ __zabbix_server_pid_dir }}"
 zabbix_server_pid_file: "{{ zabbix_server_pid_dir }}/zabbix_server.pid"
 zabbix_server_socket_dir: "{{ __zabbix_server_socket_dir }}"
 zabbix_server_externalscripts_dir: "{{ __zabbix_server_externalscripts_dir }}"
+zabbix_server_externalscripts_files: []
