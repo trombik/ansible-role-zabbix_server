@@ -90,9 +90,8 @@ the database.
     apt_repo_keys_to_add:
       - https://repo.zabbix.com/zabbix-official-repo.key
     apt_repo_to_add:
-      - "deb https://repo.zabbix.com/zabbix/5.4/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} main"
-      - "deb-src https://repo.zabbix.com/zabbix/5.4/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} main"
-
+      - "deb https://repo.zabbix.com/zabbix/5.4/{% if ansible_distribution == 'Devuan' %}debian {{ apt_repo_codename_devuan_to_debian[ansible_distribution_release] }} main{% else %}{{ ansible_distribution | lower }} {{ ansible_distribution_release }} main {% endif %}"
+      - "deb-src https://repo.zabbix.com/zabbix/5.4/{% if ansible_distribution == 'Devuan' %}debian {{ apt_repo_codename_devuan_to_debian[ansible_distribution_release] }} main{% else %}{{ ansible_distribution | lower }} {{ ansible_distribution_release }} main {% endif %}"
     zabbix_server_backend_database_password: password
 
     # XXX no trailing `/`
@@ -163,6 +162,18 @@ the database.
       FpingLocation=/usr/bin/fping
       Fping6Location=/usr/bin/fping6
       {% endif %}
+
+    zabbix_server_externalscripts_files:
+      - name: test.sh
+        content: |
+          #!/bin/sh
+          # Test external script
+          echo 1
+          exit 0
+        validate: sh -n %s
+        state: present
+      - name: remove_me.sh
+        state: absent
 
     # _______________________________________________zabbix_agent
     zabbix_agent_config: |
@@ -416,7 +427,6 @@ the database.
       //$SSO['IDP_CERT']		= 'conf/certs/idp.crt';
       //$SSO['SETTINGS']		= [];
     # _______________________________________________php_fpm
-    php_version: 7.4
     php_additional_packages_map:
       FreeBSD:
         - "archivers/php{{ php_version_without_dot }}-zip"
