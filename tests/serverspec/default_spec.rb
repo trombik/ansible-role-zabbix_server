@@ -68,6 +68,12 @@ describe file("#{log_dir}/zabbix_server.log") do
   it { should be_owned_by user }
   it { should be_grouped_into group }
   its(:content) { should match(/TLS support:\s+YES/) }
+
+  # test if the server process successfuly connected to the agent
+  its(:content) do
+    pending "zabbix server version on OpenBSD does not log any successful connection to the agent" if os[:family] == "openbsd"
+    should match(/enabling Zabbix agent checks on host "Zabbix server": interface became available/)
+  end
 end
 
 describe file(pid_dir) do
