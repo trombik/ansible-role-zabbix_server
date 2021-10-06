@@ -36,6 +36,9 @@ The role installs `py-zabbix-api` with `pip` as root.
 
 ## TLS
 
+See [Encryption](https://www.zabbix.com/documentation/current/manual/encryption)
+in the official documentation for details.
+
 Supported TLS encryption includes:
 
 * TLS between `zabbix` agent and `zabbix` server with certificates
@@ -83,9 +86,97 @@ The roles requires `ansible` collections. See [`requirements.yml`](requirements.
 
 # Role Variables
 
-| variable | description | default |
+| Variable | Description | Default |
 |----------|-------------|---------|
+| `zabbix_server_user` | user name of `zabbix` server | `{{ __zabbix_server_user }}` |
+| `zabbix_server_group` | group name of `zabbix` server | `{{ __zabbix_server_group }}` |
+| `zabbix_server_db_dir` | | `{{ __zabbix_server_db_dir }}` |
+| `zabbix_server_service` | service name of `zabbix` server | `{{ __zabbix_server_service }}` |
+| `zabbix_server_package` | package name of `zabbix` server | `{{ __zabbix_server_package }}` |
+| `zabbix_server_extra_packages` | a list of extra packages to install | `{{ __zabbix_server_extra_packages }}` |
+| `zabbix_server_conf_dir` | path to configuration directory | `{{ __zabbix_server_conf_dir }}` |
+| `zabbix_server_conf_file` | path to `zabbix_server.conf` | `{{ zabbix_server_conf_dir }}/zabbix_server.conf` |
+| `zabbix_server_flags` | TBW | `""` |
+| `zabbix_server_backend_database` | name of back-end database package (only `postgresql` is supported) | `postgresql` |
+| `zabbix_server_backend_database_sql_base_dir` | path to directory where SQL files for databases are kept | `{{ __zabbix_server_backend_database_sql_base_dir }}` |
+| `zabbix_server_backend_database_sql_dir` | path to directory where SQL files for `zabbix_server_backend_database` is kept | `{{ zabbix_server_backend_database_sql_base_dir }}/{{ zabbix_server_backend_database }}` |
+| `zabbix_server_backend_database_name` | database name | `zabbix` |
+| `zabbix_server_backend_database_user` | database user name | `zabbix` |
+| `zabbix_server_backend_database_host` | host name or IP address of database | `localhost` |
+| `zabbix_server_backend_database_password` | password of `zabbix_server_backend_database_user` | `""` |
+| `zabbix_server_listen_port` | port for `zabbix` server to listen on | `10051` |
+| `zabbix_server_api_login_password` | login password for API access | `""` |
+| `zabbix_server_api_login_user` | login user name for API access | `Admin` |
+| `zabbix_server_api_server_url` | URL of API endpoint | `http://localhost/zabbix` |
+| `zabbix_server_users` | a list of `zabbix` users to manage | `[]` |
+| `zabbix_server_usergroups` | a list of `zabbix` user groups to manage | `[]` |
+| `zabbix_server_discovery_rules` | a list of discovery rules to manage | `[]` |
+| `zabbix_server_backend_database_sql_files` | a list of file name without directory, i.e. `basename`, to initialize database | `{{ __zabbix_server_backend_database_sql_files }}` |
+| `zabbix_server_python_api_package` | name of python package to access API | `{{ __zabbix_server_python_api_package }}` |
+| `zabbix_server_log_dir` | path to log directory | `{{ __zabbix_server_log_dir }}` |
+| `zabbix_server_log_file` | path to log file | `{{ zabbix_server_log_dir }}/zabbix_server.log` |
+| `zabbix_server_pid_dir` | path to PID directory | `{{ __zabbix_server_pid_dir }}` |
+| `zabbix_server_pid_file` | path to PID file | `{{ zabbix_server_pid_dir }}/zabbix_server.pid` |
+| `zabbix_server_socket_dir` | path to socket directory | `{{ __zabbix_server_socket_dir }}` |
+| `zabbix_server_externalscripts_dir` | path to `externalscripts` directory | `{{ __zabbix_server_externalscripts_dir }}` |
+| `zabbix_server_externalscripts_files` | a list of `externalscripts` to manage | `[]` |
+| `zabbix_server_agent_host_name` | name of the `zabbix` agent on `zabbix` server | `Zabbix server` |
+| `zabbix_server_agent_tls_accept` | the value of `TLSAccept` for `zabbix` agent on `zabbix` server | `1` |
+| `zabbix_server_agent_tls_connect` | the value of `TLSConnect` for `zabbix` agent on `zabbix` server | `1` |
 
+## Debian
+
+| Variable | Default |
+|----------|---------|
+| `__zabbix_server_user` | `zabbix` |
+| `__zabbix_server_group` | `zabbix` |
+| `__zabbix_server_service` | `zabbix-server` |
+| `__zabbix_server_package` | `zabbix-server-pgsql` |
+| `__zabbix_server_extra_packages` | `["zabbix-sql-scripts"]` |
+| `__zabbix_server_conf_dir` | `/etc/zabbix` |
+| `__zabbix_server_backend_database_sql_base_dir` | `/usr/share/doc/zabbix-sql-scripts` |
+| `__zabbix_server_backend_database_sql_files` | `["create.sql.gz"]` |
+| `__zabbix_server_python_api_package` | `zabbix-api` |
+| `__zabbix_server_log_dir` | `/var/log/zabbix` |
+| `__zabbix_server_pid_dir` | `/run/zabbix` |
+| `__zabbix_server_socket_dir` | `/run/zabbix` |
+| `__zabbix_server_externalscripts_dir` | `/usr/lib/zabbix/externalscripts` |
+
+## FreeBSD
+
+| Variable | Default |
+|----------|---------|
+| `__zabbix_server_user` | `zabbix` |
+| `__zabbix_server_group` | `zabbix` |
+| `__zabbix_server_service` | `zabbix_server` |
+| `__zabbix_server_package` | `net-mgmt/zabbix54-server` |
+| `__zabbix_server_extra_packages` | `[]` |
+| `__zabbix_server_conf_dir` | `/usr/local/etc/zabbix54` |
+| `__zabbix_server_backend_database_sql_base_dir` | `/usr/local/share/zabbix54/server/database` |
+| `__zabbix_server_backend_database_sql_files` | `["schema.sql", "images.sql", "data.sql"]` |
+| `__zabbix_server_python_api_package` | `py38-zabbix-api` |
+| `__zabbix_server_log_dir` | `/var/log/zabbix` |
+| `__zabbix_server_pid_dir` | `/var/run/zabbix` |
+| `__zabbix_server_socket_dir` | `/var/run/zabbix` |
+| `__zabbix_server_externalscripts_dir` | `/usr/local/etc/zabbix54/externalscripts` |
+
+## OpenBSD
+
+| Variable | Default |
+|----------|---------|
+| `__zabbix_server_user` | `_zabbix` |
+| `__zabbix_server_group` | `_zabbix` |
+| `__zabbix_server_service` | `zabbix_server` |
+| `__zabbix_server_package` | `zabbix-server--pgsql` |
+| `__zabbix_server_extra_packages` | `[]` |
+| `__zabbix_server_conf_dir` | `/etc/zabbix` |
+| `__zabbix_server_backend_database_sql_base_dir` | `/usr/local/share/zabbix-server/schema` |
+| `__zabbix_server_backend_database_sql_files` | `["schema.sql", "images.sql", "data.sql"]` |
+| `__zabbix_server_python_api_package` | `zabbix-api` |
+| `__zabbix_server_log_dir` | `/var/log/zabbix` |
+| `__zabbix_server_pid_dir` | `/var/run/zabbix` |
+| `__zabbix_server_socket_dir` | `/var/run/zabbix` |
+| `__zabbix_server_externalscripts_dir` | `/etc/zabbix/externalscripts` |
 
 # Dependencies
 
