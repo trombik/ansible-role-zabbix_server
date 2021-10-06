@@ -129,7 +129,7 @@
         state: absent
 
     # _______________________________________________zabbix_agent
-    zabbix_agent_x509_enable: yes
+    zabbix_agent_debug: yes
     project_agent_ca_pub_file: "{{ zabbix_agent_x509_cert_dir }}/ca.pub"
     project_agent_pub_file: "{{ zabbix_agent_x509_cert_dir }}/agent.pub"
     project_agent_key_file: "{{ zabbix_agent_x509_cert_dir }}/agent.key"
