@@ -34,6 +34,7 @@ zabbix_server_externalscripts_files: []
 zabbix_server_agent_host_name: Zabbix server
 zabbix_server_agent_tls_accept: 1
 zabbix_server_agent_tls_connect: 1
+zabbix_server_debug: no
 # possible values for zabbix_server_agent_tls_accept and
 # zabbix_server_agent_tls_connect are:
 # 1: no encryption

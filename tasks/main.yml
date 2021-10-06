@@ -72,6 +72,7 @@
     unsafe_writes: "{{ item['unsafe_writes'] | default(omit) }}"
     validate: "{{ item['validate'] | default(omit) }}"
   with_items: "{{ zabbix_server_externalscripts_files }}"
+  no_log: "{% if zabbix_server_debug %}no{% else %}yes{% endif %}"
   when:
     - item['state'] == 'present'
 
@@ -162,6 +163,7 @@
     timeout: "{{ item['timeout'] | default(omit) }}"
     validate_certs: "{{ item['validate_certs'] | default(omit) }}"
   with_items: "{{ zabbix_server_usergroups }}"
+  no_log: "{% if zabbix_server_debug %}no{% else %}yes{% endif %}"
 
 - name: Manage zabbix users
   community.zabbix.zabbix_user:
@@ -191,6 +193,7 @@
     usrgrps: "{{ item['usrgrps'] | default(omit) }}"
     validate_certs: "{{ item['validate_certs'] | default(omit) }}"
   with_items: "{{ zabbix_server_users }}"
+  no_log: "{% if zabbix_server_debug %}no{% else %}yes{% endif %}"
 
 - name: Manage discovery rules
   community.zabbix.zabbix_discovery_rule:
@@ -209,3 +212,4 @@
     timeout: "{{ item['timeout'] | default(omit) }}"
     validate_certs: "{{ item['validate_certs'] | default(omit) }}"
   with_items: "{{ zabbix_server_discovery_rules }}"
+  no_log: "{% if zabbix_server_debug %}no{% else %}yes{% endif %}"

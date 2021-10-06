@@ -123,6 +123,7 @@ The roles requires `ansible` collections. See [`requirements.yml`](requirements.
 | `zabbix_server_agent_host_name` | name of the `zabbix` agent on `zabbix` server | `Zabbix server` |
 | `zabbix_server_agent_tls_accept` | the value of `TLSAccept` for `zabbix` agent on `zabbix` server | `1` |
 | `zabbix_server_agent_tls_connect` | the value of `TLSConnect` for `zabbix` agent on `zabbix` server | `1` |
+| `zabbix_server_debug` | if `no`, set `no_log: yes` on some tasks where sensitive information, such as password, is used in loop to prevent leak. do not set to `yes` on production | `no` |
 
 ## Debian
 

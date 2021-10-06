@@ -34,6 +34,7 @@
     apt_repo_to_add:
       - "deb https://repo.zabbix.com/zabbix/5.4/{% if ansible_distribution == 'Devuan' %}debian {{ apt_repo_codename_devuan_to_debian[ansible_distribution_release] }} main{% else %}{{ ansible_distribution | lower }} {{ ansible_distribution_release }} main {% endif %}"
       - "deb-src https://repo.zabbix.com/zabbix/5.4/{% if ansible_distribution == 'Devuan' %}debian {{ apt_repo_codename_devuan_to_debian[ansible_distribution_release] }} main{% else %}{{ ansible_distribution | lower }} {{ ansible_distribution_release }} main {% endif %}"
+    zabbix_server_debug: yes
     zabbix_server_backend_database_password: password
 
     # XXX no trailing `/`
