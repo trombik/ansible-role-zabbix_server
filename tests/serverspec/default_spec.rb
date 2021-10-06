@@ -1,5 +1,6 @@
 require "spec_helper"
 require "serverspec"
+require "json"
 
 package = "zabbix-server-pgsql"
 service = "zabbix-server"
@@ -18,6 +19,7 @@ ports   = [
 conf_dir = "/etc/zabbix"
 default_user = "root"
 default_group = "root"
+api_url = "http://127.0.0.1/api_jsonrpc.php"
 
 case os[:family]
 when "freebsd"
@@ -208,3 +210,76 @@ end
 # )
 #
 # users = zbx.users.get_id(alias: "Admin")
+
+# until zabbixapi gem supports 5.4, workaround by hand-crafted curl version of
+# tests.
+describe "API" do
+  let(:header) { "Content-Type: application/json-rpc" }
+  let(:url) { api_url }
+  let(:response) do
+    r = Specinfra.backend.run_command("curl -s -X POST -H #{header.shellescape} -d #{body.to_json.shellescape} #{url.shellescape}").stdout
+    JSON.parse(r)
+  end
+  let(:result) { response["result"] }
+  let(:auth) do
+    b = {
+      "jsonrpc" => "2.0",
+      "method" => "user.login",
+      "params" => {
+        "user" => "Admin",
+        "password" => "api_password"
+      },
+      "id" => 1,
+      "auth" => nil
+    }
+    r = Specinfra.backend.run_command("curl -s -X POST -H #{header.shellescape} -d #{b.to_json.shellescape} #{url.shellescape}").stdout
+    JSON.parse(r)["result"]
+  end
+
+  describe "host.get" do
+    let(:body) do
+      {
+        "jsonrpc" => "2.0",
+        "method" => "host.get",
+        "params" => {
+          "filter" => {
+            "host" => [
+              "Zabbix server"
+            ]
+          }
+        },
+        "id" => 1,
+        "auth" => auth
+      }
+    end
+
+    it "returns Zabbix server" do
+      expect(response).not_to include("error")
+      expect(result.first["host"]).to eq "Zabbix server"
+    end
+  end
+
+  describe "drule.get" do
+    let(:body) do
+      {
+        "jsonrpc" => "2.0",
+        "method" => "drule.get",
+        "params" => {
+          "output" => "extend",
+          "selectDChecks" => "extend"
+        },
+        "id" => 1,
+        "auth" => auth
+      }
+    end
+
+    it "includes `LAN` discovery rule" do
+      expect(response).not_to include("error")
+
+      # XXX expect two discovery rules. one default rule and, another we
+      # created in the test
+      expect(result.length).to eq 2
+      expect(result[1]["name"]).to eq "LAN"
+    end
+  end
+end
