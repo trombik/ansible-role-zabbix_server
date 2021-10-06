@@ -115,6 +115,29 @@
     tls_accept: "{{ zabbix_server_agent_tls_accept }}"
     tls_connect: "{{ zabbix_server_agent_tls_connect }}"
 
+- name: Create zabbix_server_x509_cert_dir
+  ansible.builtin.file:
+    path: "{{ zabbix_server_x509_cert_dir }}"
+    owner: "{{ zabbix_server_user }}"
+    group: "{{ zabbix_server_group }}"
+    mode: "0755"
+    state: directory
+  when:
+    - zabbix_server_x509_cert_dir
+    - zabbix_server_x509_cert_dir | length > 0
+
+- name: Include trombik.x509_certificate
+  # XXX `ansible.builtin.include_role` causes `MODULE FAILURE` on Ubuntu
+  # (ansible 2.9.6). use `include_role` for now.
+  # ansible.builtin.include_role:
+  include_role:
+    name: trombik.x509_certificate
+  vars:
+    x509_certificate: "{{ zabbix_server_x509_certificates }}"
+    x509_certificate_debug_log: "{{ zabbix_server_debug }}"
+  when:
+    - zabbix_server_x509_certificates | length > 0
+
 # XXX does not work with version 5.4.x
 # see https://github.com/ansible-collections/community.zabbix/issues/460
 #

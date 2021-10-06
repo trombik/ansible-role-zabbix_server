@@ -34,13 +34,15 @@ zabbix_server_externalscripts_files: []
 zabbix_server_agent_host_name: Zabbix server
 zabbix_server_agent_tls_accept: 1
 zabbix_server_agent_tls_connect: 1
-zabbix_server_debug: no
 # possible values for zabbix_server_agent_tls_accept and
 # zabbix_server_agent_tls_connect are:
 # 1: no encryption
 # 2: PSK
 # 4: certificate
 # you can `OR` multiple values. 3 means `no encryption or PSK`
+zabbix_server_x509_cert_dir: "{{ zabbix_server_conf_dir }}/cert"
+zabbix_server_x509_certificates: []
+zabbix_server_debug: no
 
 # XXX does not work yet
 # zabbix_server_agent_tls_psk: ""
