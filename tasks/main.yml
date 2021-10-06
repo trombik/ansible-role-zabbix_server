@@ -114,6 +114,25 @@
     tls_accept: "{{ zabbix_server_agent_tls_accept }}"
     tls_connect: "{{ zabbix_server_agent_tls_connect }}"
 
+# XXX does not work with version 5.4.x
+# see https://github.com/ansible-collections/community.zabbix/issues/460
+#
+# - name: Set tls_psk of zabbix agent on the server
+#   community.zabbix.zabbix_host:
+#     server_url: "{{ zabbix_server_api_server_url }}"
+#     login_password: "{{ zabbix_server_api_login_password }}"
+#     login_user: "{{ zabbix_server_api_login_user }}"
+#     host_name: "{{ zabbix_server_agent_host_name }}"
+#     tls_psk: "{{ zabbix_server_agent_tls_psk }}"
+#
+# - name: Set tls_psk_identity of zabbix agent on the server
+#   community.zabbix.zabbix_host:
+#     server_url: "{{ zabbix_server_api_server_url }}"
+#     login_password: "{{ zabbix_server_api_login_password }}"
+#     login_user: "{{ zabbix_server_api_login_user }}"
+#     host_name: "{{ zabbix_server_agent_host_name }}"
+#     tls_psk_identity: "{{ zabbix_server_agent_tls_psk_identity }}"
+
 - name: "Create {{ zabbix_server_conf_file }}"
   ansible.builtin.template:
     src: zabbix_server.conf.j2

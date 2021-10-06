@@ -32,8 +32,15 @@ zabbix_server_socket_dir: "{{ __zabbix_server_socket_dir }}"
 zabbix_server_externalscripts_dir: "{{ __zabbix_server_externalscripts_dir }}"
 zabbix_server_externalscripts_files: []
 zabbix_server_agent_host_name: Zabbix server
+zabbix_server_agent_tls_accept: 1
+zabbix_server_agent_tls_connect: 1
+# possible values for zabbix_server_agent_tls_accept and
+# zabbix_server_agent_tls_connect are:
 # 1: no encryption
 # 2: PSK
 # 4: certificate
-zabbix_server_agent_tls_accept: 1
-zabbix_server_agent_tls_connect: 1
+# you can `OR` multiple values. 3 means `no encryption or PSK`
+
+# XXX does not work yet
+# zabbix_server_agent_tls_psk: ""
+# zabbix_server_agent_tls_psk_identity: ""
