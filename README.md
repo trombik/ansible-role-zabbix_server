@@ -14,8 +14,8 @@ The role does not support `MySQL`.
 The role overrides the default login password of `Admin`, which can be
 controlled by `zabbix_server_api_login_password`.
 
-The example uses many my `ansible` roles, but they are all optional. You may
-use any other roles.
+The example uses many my `ansible` roles (see [`requirements.yml`](requirements.yml`),
+but they are all optional. You may use any other roles.
 
 ## Notes for FreeBSD users
 
@@ -75,9 +75,9 @@ request. The role does not use it.
 
 `server.csr` is a signing request. The role does not use it.
 
-To distribute keys, the example uses `trombik.x509_certificate`. However, you
-may use other means. It is `trombik.zabbix_agent` `ansible` role that calls
-`trombik.x509_certificate`. This role does not directly use
+To distribute keys, the example uses [`trombik.x509_certificate`](https://github.com/trombik/ansible-role-x509_certificate).
+However, you may use other means. It is `trombik.zabbix_agent` `ansible` role
+that calls `trombik.x509_certificate`. This role does not directly use
 `trombik.x509_certificate`.
 
 # Requirements
