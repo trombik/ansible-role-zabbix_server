@@ -7,6 +7,10 @@ rules. Other `zabbix` resources should be managed by your own roles.
 create an API user, and use that user in your role. The role has all access,
 including access to the database.
 
+The role supports FreeBSD, OpenBSD, and Debian variants.
+
+The role is still in beta.
+
 ## Notes for all users
 
 The role does not support `MySQL`.
