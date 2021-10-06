@@ -80,10 +80,10 @@ request. The role does not use it.
 
 `server.csr` is a signing request. The role does not use it.
 
-To distribute keys, the example uses [`trombik.x509_certificate`](https://github.com/trombik/ansible-role-x509_certificate).
-However, you may use other means. It is [`trombik.zabbix_agent`](https://github.com/trombik/ansible-role-zabbix_agent)
-`ansible` role that calls `trombik.x509_certificate`. This role does not
-directly use `trombik.x509_certificate`.
+To distribute keys, the example uses [`trombik.x509_certificate`](https://github.com/trombik/ansible-role-x509_certificate) by including it.
+However, you may use other means. If you do not use
+[`trombik.x509_certificate`], set `zabbix_server_x509_certificates` to empty
+list (the default).
 
 # Requirements
 
@@ -128,6 +128,8 @@ The roles requires `ansible` collections. See [`requirements.yml`](requirements.
 | `zabbix_server_agent_host_name` | name of the `zabbix` agent on `zabbix` server | `Zabbix server` |
 | `zabbix_server_agent_tls_accept` | the value of `TLSAccept` for `zabbix` agent on `zabbix` server | `1` |
 | `zabbix_server_agent_tls_connect` | the value of `TLSConnect` for `zabbix` agent on `zabbix` server | `1` |
+| `zabbix_server_x509_cert_dir` | path to directory where certificates are kept. the role creates the directory | `"{{ zabbix_server_conf_dir }}/cert` |
+| `zabbix_server_x509_certificates` | list of certificates to manage. when the length is more then zero, the role include `trombik.x509_certificate` and pass the list to `trombik.x509_certificate` | `[]` |
 | `zabbix_server_debug` | if `no`, set `no_log: yes` on some tasks where sensitive information, such as password, is used in loop to prevent leak. do not set to `yes` on production | `no` |
 
 ## Debian
