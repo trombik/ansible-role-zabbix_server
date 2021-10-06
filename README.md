@@ -44,8 +44,8 @@ Supported TLS encryption includes:
 * TLS between `zabbix` agent and `zabbix` server with certificates
 
 The role manages encryption setting of `zabbix` agent on the `zabbix` server.
-See `zabbix_server_agent_tls_accept` and `zabbix_server_agent_tls_connect`. No
-encryption is the default.
+See `zabbix_server_agent_tls_accept` and `zabbix_server_agent_tls_connect`.
+The default is `No encryption`.
 
 ### TLS between `zabbix` agent and `zabbix` server with certificates
 
