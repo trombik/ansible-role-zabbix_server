@@ -1,0 +1,32 @@
+---
+
+- name: Crate the database
+  community.mysql.mysql_db:
+    name: "{{ zabbix_server_backend_database_name }}"
+    login_user: "{{ zabbix_server_backend_database_user }}"
+    login_host: "{{ zabbix_server_backend_database_host }}"
+    login_password: "{{ zabbix_server_backend_database_password }}"
+    encoding: "utf8"
+    collation: "utf8_bin"
+    state: present
+
+- name: Crate the database from schema files
+  community.mysql.mysql_db:
+    name: "{{ zabbix_server_backend_database_name }}"
+    target: "{{ zabbix_server_backend_database_sql_dir }}/{{ item }}"
+    login_user: "{{ zabbix_server_backend_database_user }}"
+    login_host: "{{ zabbix_server_backend_database_host }}"
+    login_password: "{{ zabbix_server_backend_database_password }}"
+    state: import
+  with_items: "{{ zabbix_server_backend_database_sql_files }}"
+
+- name: Set zabbix_server_api_login_password
+  community.zabbix.zabbix_user:
+    passwd: "{{ zabbix_server_api_login_password }}"
+    alias: Admin
+    login_password: zabbix
+    login_user: Admin
+    server_url: "{{ zabbix_server_api_server_url }}"
+    override_passwd: yes
+    usrgrps:
+      - Zabbix administrators

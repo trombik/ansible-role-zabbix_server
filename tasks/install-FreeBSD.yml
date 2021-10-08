@@ -4,13 +4,11 @@
   # XXX available at https://github.com/trombik/freebsd-ports-py-zabbix-api
   ansible.builtin.pkgng:
     name: "{{ zabbix_server_python_api_package }}"
-    pkgsite: local
     state: present
 
 - name: Install zabbix_server_package
   ansible.builtin.pkgng:
     name: "{{ zabbix_server_package }}"
-    pkgsite: local
     state: present
 
 - name: Install zabbix_server_extra_packages

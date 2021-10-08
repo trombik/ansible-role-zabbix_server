@@ -8,7 +8,7 @@
       when: ansible_os_family == 'Debian'
     - role: trombik.pip
       when: ansible_os_family == 'Debian' or ansible_os_family == 'OpenBSD'
-    - role: trombik.postgresql
+    - role: trombik.mysql
     - role: trombik.zabbix_agent
     - role: trombik.zabbix_frontend
     - role: trombik.nginx
@@ -17,15 +17,18 @@
     - role: trombik.php_fpm
     - ansible-role-zabbix_server
   vars:
-    # XXX use my own package repository as the package in the official package
-    # tree does not include postgresql support.
-    # also, py38-zabbix-api is not in the tree.
+    # XXX use my own package repository as py38-zabbix-api is not in the tree.
     freebsd_pkg_repo:
       local:
         enabled: "true"
         state: present
         url: "http://pkg.i.trombik.org/{{ ansible_distribution_version | regex_replace('\\.') }}{{ ansible_architecture }}-default-default"
+      FreeBSD:
+        enabled: "true"
         priority: 99
+        state: present
+    # _______________________________________________mysql_related_variables
+    zabbix_server_backend_database: mysql
 
     apt_repo_enable_apt_transport_https: yes
     # https://repo.zabbix.com/zabbix/5.4/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.4-1+ubuntu20.04_all.deb
@@ -369,117 +372,115 @@
             eQlLeaYnzV5csXaKTi+XBXU+VqrZBvpY27APRmb7JJWl3mgnwSnPjyg=
             -----END RSA PRIVATE KEY-----
 
-    # _______________________________________________postgresql
-    postgresql_initial_password: password
-    postgresql_debug: yes
-    os_sysctl:
-      FreeBSD: {}
-      OpenBSD:
-        # for postgresql
-        kern.seminfo.semmni: 60
-        kern.seminfo.semmns: 1024
-
-        # zabbix server fails to start:
-        # cannot initialize configuration cache: cannot get private shared
-        # memory of size 8388608 for configuration cache: [12] Cannot allocate
-        # memory
-        #
-        # cannot initialize database cache: cannot get private shared memory
-        # of size 16777216 for history cache
-        kern.shminfo.shmmax: 51200000
-      Debian: {}
-      RedHat: {}
-    sysctl: "{{ os_sysctl[ansible_os_family] }}"
-
-    os_postgresql_extra_packages:
+    # _______________________________________________mysql
+    mysql_login_password: password
+    os_mysql_config_fragments:
       FreeBSD:
-        - "databases/postgresql{{ postgresql_major_version }}-contrib"
-      OpenBSD:
-        - postgresql-contrib
-      Debian:
-        - postgresql-contrib
-      RedHat:
-        - "postgresql{{ postgresql_major_version }}-contrib"
+        - name: my.cnf
+          content: |
+            [client]
+            port                            = {{ mysql_listen_port }}
+            socket                          = /tmp/mysql.sock
 
-    postgresql_extra_packages: "{{ os_postgresql_extra_packages[ansible_os_family] }}"
-    postgresql_pg_hba_config: |
-      host    all             all             127.0.0.1/32            {{ postgresql_default_auth_method }}
-      host    all             all             ::1/128                 {{ postgresql_default_auth_method }}
-      local   replication     all                                     trust
-      host    replication     all             127.0.0.1/32            trust
-      host    replication     all             ::1/128                 trust
-    postgresql_config: |
-      {% if ansible_os_family == 'Debian' %}
-      data_directory = '{{ postgresql_db_dir }}'
-      hba_file = '{{ postgresql_conf_dir }}/pg_hba.conf'
-      ident_file = '{{ postgresql_conf_dir }}/pg_ident.conf'
-      external_pid_file = '/var/run/postgresql/{{ postgresql_major_version }}-main.pid'
-      port = 5432
-      max_connections = 100
-      unix_socket_directories = '/var/run/postgresql'
-      ssl = on
-      ssl_cert_file = '/etc/ssl/certs/ssl-cert-snakeoil.pem'
-      ssl_key_file = '/etc/ssl/private/ssl-cert-snakeoil.key'
-      shared_buffers = 128MB
-      dynamic_shared_memory_type = posix
-      log_line_prefix = '%m [%p] %q%u@%d '
-      log_timezone = 'UTC'
-      cluster_name = '{{ postgresql_major_version }}/main'
-      stats_temp_directory = '/var/run/postgresql/{{ postgresql_major_version }}-main.pg_stat_tmp'
-      datestyle = 'iso, mdy'
-      timezone = 'UTC'
-      lc_messages = 'C'
-      lc_monetary = 'C'
-      lc_numeric = 'C'
-      lc_time = 'C'
-      default_text_search_config = 'pg_catalog.english'
-      include_dir = 'conf.d'
-      password_encryption = {{ postgresql_default_auth_method }}
-      {% else %}
-      max_connections = 100
-      shared_buffers = 128MB
-      dynamic_shared_memory_type = posix
-      max_wal_size = 1GB
-      min_wal_size = 80MB
-      log_destination = 'syslog'
-      log_timezone = 'UTC'
-      update_process_title = off
-      datestyle = 'iso, mdy'
-      timezone = 'UTC'
-      lc_messages = 'C'
-      lc_monetary = 'C'
-      lc_numeric = 'C'
-      lc_time = 'C'
-      default_text_search_config = 'pg_catalog.english'
-      password_encryption = {{ postgresql_default_auth_method }}
-      {% endif %}
-    postgresql_users:
+            [mysql]
+            prompt                          = \u@\h [\d]>\_
+            no_auto_rehash
+
+            [mysqld]
+            user                            = mysql
+            port                            = {{ mysql_listen_port }}
+            socket                          = /tmp/mysql.sock
+            bind-address                    = {{ mysql_listen_address }}
+            basedir                         = /usr/local
+            datadir                         = {{ mysql_db_dir }}
+            tmpdir                          = /var/db/mysql_tmpdir
+            slave-load-tmpdir               = /var/db/mysql_tmpdir
+            secure-file-priv                = /var/db/mysql_secure
+            log-bin                         = mysql-bin
+            log-output                      = TABLE
+            master-info-repository          = TABLE
+            relay-log-info-repository       = TABLE
+            relay-log-recovery              = 1
+            slow-query-log                  = 1
+            server-id                       = 1
+            sync_binlog                     = 1
+            sync_relay_log                  = 1
+            binlog_cache_size               = 16M
+            expire_logs_days                = 30
+            default_password_lifetime       = 0
+            enforce-gtid-consistency        = 1
+            gtid-mode                       = ON
+            safe-user-create                = 1
+            lower_case_table_names          = 1
+            explicit-defaults-for-timestamp = 1
+            myisam-recover-options          = BACKUP,FORCE
+            open_files_limit                = 32768
+            table_open_cache                = 16384
+            table_definition_cache          = 8192
+            net_retry_count                 = 16384
+            key_buffer_size                 = 256M
+            max_allowed_packet              = 64M
+            query_cache_type                = 0
+            query_cache_size                = 0
+            long_query_time                 = 0.5
+            innodb_buffer_pool_size         = 1G
+            innodb_data_home_dir            = {{ mysql_db_dir }}
+            innodb_log_group_home_dir       = {{ mysql_db_dir }}
+            innodb_data_file_path           = ibdata1:128M:autoextend
+            innodb_temp_data_file_path      = ibtmp1:128M:autoextend
+            innodb_flush_method             = O_DIRECT
+            innodb_log_file_size            = 256M
+            innodb_log_buffer_size          = 16M
+            innodb_write_io_threads         = 8
+            innodb_read_io_threads          = 8
+            innodb_autoinc_lock_mode        = 2
+            skip-symbolic-links
+
+            # for zabbix
+            character-set-server = utf8
+
+            [mysqldump]
+            max_allowed_packet              = 256M
+            quote_names
+            quick
+      Debian:
+        - name: my.cnf
+          follow: yes
+          content: |
+            !includedir /etc/mysql/conf.d/
+            !includedir /etc/mysql/mysql.conf.d/
+        - name: my.cnf.fallback
+          content: |
+            !includedir /etc/mysql/conf.d/
+        - name: conf.d/mysqldump.cnf
+          content: |
+            [mysqldump]
+            quick
+            quote-names
+            max_allowed_packet	= 16M
+        - name: conf.d/mysql.cnf
+          content: |
+            [mysql]
+        - name: mysql.conf.d/mysql.cnf
+          content: |
+            [mysql]
+        - name: mysql.conf.d/mysqld.cnf
+          content: |
+            [mysqld]
+            user		= mysql
+            bind-address		= 127.0.0.1
+            mysqlx-bind-address	= 127.0.0.1
+            key_buffer_size		= 16M
+            myisam-recover-options  = BACKUP
+            log_error = /var/log/mysql/error.log
+            max_binlog_size   = 100M
+
+    mysql_config_fragments: "{{ os_mysql_config_fragments[ansible_os_family] }}"
+    mysql_users:
       - name: "{{ zabbix_server_backend_database_user }}"
         password: "{{ zabbix_server_backend_database_password }}"
-        role_attr_flags: CREATEDB
-
-    postgresql_databases: []
-
-    project_postgresql_initdb_flags: --encoding=utf-8 --lc-collate=C --locale=en_US.UTF-8
-    project_postgresql_initdb_flags_pwfile: "--pwfile={{ postgresql_initial_password_file }}"
-    project_postgresql_initdb_flags_auth: "--auth-host={{ postgresql_default_auth_method }} --auth-local={{ postgresql_default_auth_method }}"
-    os_postgresql_initdb_flags:
-      FreeBSD: "{{ project_postgresql_initdb_flags }} {{ project_postgresql_initdb_flags_pwfile }} {{ project_postgresql_initdb_flags_auth }}"
-      OpenBSD: "{{ project_postgresql_initdb_flags }} {{ project_postgresql_initdb_flags_pwfile }} {{ project_postgresql_initdb_flags_auth }}"
-      RedHat: "{{ project_postgresql_initdb_flags }} {{ project_postgresql_initdb_flags_pwfile }} {{ project_postgresql_initdb_flags_auth }}"
-      # XXX you cannot use --auth-host or --auth-local here because
-      # pg_createcluster, which is executed during the installation, overrides
-      # them, forcing md5
-      Debian: "{{ project_postgresql_initdb_flags }} {{ project_postgresql_initdb_flags_pwfile }}"
-
-    postgresql_initdb_flags: "{{ os_postgresql_initdb_flags[ansible_os_family] }}"
-    os_postgresql_flags:
-      FreeBSD: |
-        postgresql_flags="-w -s -m fast"
-      OpenBSD: ""
-      Debian: ""
-      RedHat: ""
-    postgresql_flags: "{{ os_postgresql_flags[ansible_os_family] }}"
+        priv: "{{ zabbix_server_backend_database_name }}.*:ALL"
+    mysql_databases: []
 
     # _______________________________________________nginx
     nginx_flags: -q
@@ -609,15 +610,15 @@
       FreeBSD:
         - "archivers/php{{ php_version_without_dot }}-zip"
         - "textproc/php{{ php_version_without_dot }}-xsl"
-        - "databases/php{{ php_version_without_dot }}-pgsql"
+        - "databases/php{{ php_version_without_dot }}-mysqli"
       OpenBSD:
         - "php-zip%{{ php_version }}"
         - "php-xsl%{{ php_version }}"
-        - "php-pgsql%{{ php_version }}"
+        - "php-mysql%{{ php_version }}"
       Debian:
         - "php{{ php_version }}-zip"
         - "php{{ php_version }}-xsl"
-        - "php{{ php_version }}-pgsql"
+        - "php{{ php_version }}-mysql"
     php_additional_packages: "{{ php_additional_packages_map[ansible_os_family] }}"
 
     php_ini_config: |
@@ -674,7 +675,7 @@
       {% if ansible_os_family == 'OpenBSD' %}
       date.timezone = "UTC"
       extension=gd.so
-      extension=pgsql.so
+      extension=mysql.so
       extension=xsl.so
       extension=zip.so
       {% endif %}

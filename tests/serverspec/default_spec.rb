@@ -2,6 +2,10 @@ require "spec_helper"
 require "serverspec"
 require "json"
 
+# rubocop:disable Style/GlobalVars
+$BACKEND_DATABASE ||= "postgresql"
+# rubocop:enable Style/GlobalVars
+
 package = "zabbix-server-pgsql"
 service = "zabbix-server"
 log_dir = "/var/log/zabbix"
@@ -131,6 +135,18 @@ when "freebsd"
     it { should be_grouped_into default_group }
     it { should be_mode 644 }
     its(:content) { should match Regexp.escape("Managed by ansible") }
+  end
+
+  describe command "pkg info #{package}" do
+    its(:stderr) { should eq "" }
+    case $BACKEND_DATABASE
+    when "mysql"
+      its(:stdout) { should match(/MYSQL\s+:\s+on/) }
+    when "postgresql"
+      its(:stdout) { should match(/PGSQL\s+:\s+on/) }
+    else
+      raise "Unknown $BACKEND_DATABASE `#{$BACKEND_DATABASE}`"
+    end
   end
 end
 
