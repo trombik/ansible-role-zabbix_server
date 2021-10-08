@@ -95,7 +95,19 @@
     login_password: "{{ zabbix_server_backend_database_password }}"
     query: SELECT 1
   when: zabbix_server_backend_database == 'postgresql'
-  register: __zabbix_server_backend_database_exist
+  register: __zabbix_server_postgresql_database_exist
+  changed_when: false
+  failed_when: false
+
+- name: See if the database exists (mysql)
+  community.mysql.mysql_query:
+    login_db: "{{ zabbix_server_backend_database_name }}"
+    login_user: "{{ zabbix_server_backend_database_user }}"
+    login_host: "{{ zabbix_server_backend_database_host }}"
+    login_password: "{{ zabbix_server_backend_database_password }}"
+    query: SELECT mandatory FROM dbversion;
+  when: zabbix_server_backend_database == 'mysql'
+  register: __zabbix_server_mysql_database_exist
   changed_when: false
   failed_when: false
 
@@ -103,8 +115,15 @@
   include_tasks: "createdb_postgresql.yml"
   when:
     - zabbix_server_backend_database == 'postgresql'
-    - "'msg' in __zabbix_server_backend_database_exist"
-    - __zabbix_server_backend_database_exist.msg is search("FATAL:\s+database .* does not exist")
+    - "'msg' in __zabbix_server_postgresql_database_exist"
+    - __zabbix_server_postgresql_database_exist.msg is search("FATAL:\s+database .* does not exist")
+
+- name: "Include createdb_mysql.yml if database does not exist"
+  include_tasks: "createdb_mysql.yml"
+  when:
+    - zabbix_server_backend_database == 'mysql'
+    - "'msg' in __zabbix_server_mysql_database_exist"
+    - __zabbix_server_mysql_database_exist.msg is search("Unknown database")
 
 - name: Set allowed encryption methods of zabbix agent on the server
   community.zabbix.zabbix_host:
@@ -123,7 +142,6 @@
     mode: "0755"
     state: directory
   when:
-    - zabbix_server_x509_cert_dir
     - zabbix_server_x509_cert_dir | length > 0
 
 - name: Include trombik.x509_certificate

@@ -1,6 +1,8 @@
 ---
 driver:
   name: vagrant
+  customize:
+    memory: 1024
 
 transport:
   name: rsync
@@ -78,3 +80,10 @@ suites:
     verifier:
       name: shell
       command: rspec -c -f d -I tests/serverspec tests/serverspec/default_spec.rb
+  - name: mysql
+    provisioner:
+      name: ansible_playbook
+      playbook: tests/serverspec/mysql.yml
+    verifier:
+      name: shell
+      command: rspec -c -f d -I tests/serverspec tests/serverspec/mysql_spec.rb

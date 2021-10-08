@@ -5,12 +5,14 @@ roles:
   - name: trombik.sysctl
   - name: trombik.freebsd_pkg_repo
   - name: trombik.postgresql
+  - name: trombik.mysql
   - name: trombik.zabbix_agent
   - name: trombik.zabbix_frontend
   - name: trombik.pip
   - name: trombik.apt_repo
   - name: trombik.x509_certificate
 collections:
+  - name: community.mysql
   - name: community.postgresql
   - name: community.zabbix
   - name: community.general

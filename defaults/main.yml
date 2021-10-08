@@ -13,7 +13,7 @@ zabbix_server_backend_database_sql_base_dir: "{{ __zabbix_server_backend_databas
 zabbix_server_backend_database_sql_dir: "{{ zabbix_server_backend_database_sql_base_dir }}/{{ zabbix_server_backend_database }}"
 zabbix_server_backend_database_name: zabbix
 zabbix_server_backend_database_user: zabbix
-zabbix_server_backend_database_host: localhost
+zabbix_server_backend_database_host: 127.0.0.1
 zabbix_server_backend_database_password: ""
 zabbix_server_listen_port: 10051
 zabbix_server_api_login_password: ""
