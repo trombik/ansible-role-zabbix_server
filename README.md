@@ -9,11 +9,11 @@ including access to the database.
 
 The role supports FreeBSD, OpenBSD, and Debian variants.
 
+The role support `PostgreSQL`, `MySQL` and `MariaDB`.
+
 The role is still in beta.
 
 ## Notes for all users
-
-The role does not support `MySQL`.
 
 The role overrides the default login password of `Admin`, which can be
 controlled by `zabbix_server_api_login_password`.
