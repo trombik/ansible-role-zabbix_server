@@ -566,7 +566,7 @@
       $DB['SCHEMA']			= '';
 
       // Used for TLS connection.
-      $DB['ENCRYPTION']		= true;
+      $DB['ENCRYPTION']		= false;
       $DB['KEY_FILE']			= '';
       $DB['CERT_FILE']		= '';
       $DB['CA_FILE']			= '';

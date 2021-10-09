@@ -1,6 +1,6 @@
 ---
 
-- name: Crate the database
+- name: Create the database
   community.postgresql.postgresql_db:
     db: "{{ zabbix_server_backend_database_name }}"
     login_user: "{{ zabbix_server_backend_database_user }}"
@@ -9,7 +9,7 @@
     owner: "{{ zabbix_server_backend_database_user }}"
     encoding: Unicode
 
-- name: Crate the database from schema files
+- name: Create the database from schema files
   community.postgresql.postgresql_db:
     db: "{{ zabbix_server_backend_database_name }}"
     login_user: "{{ zabbix_server_backend_database_user }}"
