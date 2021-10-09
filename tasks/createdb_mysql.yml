@@ -1,6 +1,6 @@
 ---
 
-- name: Crate the database
+- name: Create the database
   community.mysql.mysql_db:
     name: "{{ zabbix_server_backend_database_name }}"
     login_user: "{{ zabbix_server_backend_database_user }}"
@@ -10,7 +10,7 @@
     collation: "utf8_bin"
     state: present
 
-- name: Crate the database from schema files
+- name: Create the database from schema files
   community.mysql.mysql_db:
     name: "{{ zabbix_server_backend_database_name }}"
     target: "{{ zabbix_server_backend_database_sql_dir }}/{{ item }}"

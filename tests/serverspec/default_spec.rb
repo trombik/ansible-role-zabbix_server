@@ -37,13 +37,27 @@ when "freebsd"
 when "openbsd"
   user = "_zabbix"
   group = "_zabbix"
-  package = "zabbix-server-5.0.10-pgsql"
+  # rubocop:disable Style/GlobalVars
+  package = if $BACKEND_DATABASE == "mysql"
+              "zabbix-server-5.0.10-mysql"
+            else
+              "zabbix-server-5.0.10-pgsql"
+            end
+  # rubocop:enable Style/GlobalVars
   conf_dir = "/etc/zabbix"
   default_group = "wheel"
   service = "zabbix_server"
   pid_dir = "/var/run/zabbix"
   socket_dir = "/var/run/zabbix"
   externalscripts_dir = "#{conf_dir}/externalscripts"
+when "ubuntu"
+  # rubocop:disable Style/GlobalVars
+  package = "zabbix-server-mysql" if $BACKEND_DATABASE == "mysql"
+  # rubocop:enable Style/GlobalVars
+when "devuan"
+  # rubocop:disable Style/GlobalVars
+  package = "zabbix-server-mysql" if $BACKEND_DATABASE == "mysql"
+  # rubocop:enable Style/GlobalVars
 end
 
 config = "#{conf_dir}/zabbix_server.conf"
@@ -75,8 +89,7 @@ describe file("#{log_dir}/zabbix_server.log") do
 
   # test if the server process successfuly connected to the agent
   its(:content) do
-    pending "zabbix server version on OpenBSD does not log any successful connection to the agent" if os[:family] == "openbsd"
-    should match(/enabling Zabbix agent checks on host "Zabbix server": interface became available/)
+    should match(/enabling Zabbix agent checks on host "Zabbix server": (?:interface|host) became available/)
   end
 end
 
@@ -139,6 +152,7 @@ when "freebsd"
 
   describe command "pkg info #{package}" do
     its(:stderr) { should eq "" }
+    # rubocop:disable Style/GlobalVars
     case $BACKEND_DATABASE
     when "mysql"
       its(:stdout) { should match(/MYSQL\s+:\s+on/) }
@@ -147,6 +161,7 @@ when "freebsd"
     else
       raise "Unknown $BACKEND_DATABASE `#{$BACKEND_DATABASE}`"
     end
+    # rubocop:enable Style/GlobalVars
   end
 end
 

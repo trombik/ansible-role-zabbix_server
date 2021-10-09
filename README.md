@@ -428,7 +428,6 @@ the database.
             -----END CERTIFICATE-----
         secret:
           path: "{{ project_server_key_file }}"
-          # XXX you cannot use zabbix_server_user or zabbix_server_group here
           owner: "{{ zabbix_server_user }}"
           group: "{{ zabbix_server_group }}"
           mode: "0600"
@@ -765,7 +764,7 @@ the database.
       $DB['SCHEMA']			= '';
 
       // Used for TLS connection.
-      $DB['ENCRYPTION']		= true;
+      $DB['ENCRYPTION']		= false;
       $DB['KEY_FILE']			= '';
       $DB['CERT_FILE']		= '';
       $DB['CA_FILE']			= '';
