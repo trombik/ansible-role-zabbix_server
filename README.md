@@ -9,7 +9,8 @@ including access to the database.
 
 The role supports FreeBSD, OpenBSD, and Debian variants.
 
-The role support `PostgreSQL`, `MySQL` and `MariaDB`.
+The role support `PostgreSQL`, `MySQL` and `MariaDB`. An example for `MySQL`
+can be found at: [`tests/serverspec/mysql.yml`](tests/serverspec/mysql.yml)
 
 The role is still in beta.
 
