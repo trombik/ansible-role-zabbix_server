@@ -26,7 +26,6 @@
         state: present
         url: "http://pkg.i.trombik.org/{{ ansible_distribution_version | regex_replace('\\.') }}{{ ansible_architecture }}-default-default"
         priority: 99
-        state: present
     # _______________________________________________mysql_related_variables
     zabbix_server_backend_database: mysql
 
