@@ -17,14 +17,14 @@
     - role: trombik.php_fpm
     - ansible-role-zabbix_server
   vars:
-    # XXX use my own package repository as py38-zabbix-api is not in the tree.
+    # XXX use my own package repository as the package in the official package
+    # tree does not include postgresql support.
+    # also, py38-zabbix-api is not in the tree.
     freebsd_pkg_repo:
       local:
         enabled: "true"
         state: present
         url: "http://pkg.i.trombik.org/{{ ansible_distribution_version | regex_replace('\\.') }}{{ ansible_architecture }}-default-default"
-      FreeBSD:
-        enabled: "true"
         priority: 99
         state: present
     # _______________________________________________mysql_related_variables
@@ -32,7 +32,7 @@
 
     os_zabbix_server_package:
       Debian: zabbix-server-mysql
-      FreeBSD: "{{ __zabbix_server_package }}"
+      FreeBSD: zabbix54-server-mysql
       OpenBSD: zabbix-server--mysql
     zabbix_server_package: "{{ os_zabbix_server_package[ansible_os_family] }}"
 

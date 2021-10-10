@@ -26,6 +26,7 @@
         state: present
         url: "http://pkg.i.trombik.org/{{ ansible_distribution_version | regex_replace('\\.') }}{{ ansible_architecture }}-default-default"
         priority: 99
+        state: present
 
     apt_repo_enable_apt_transport_https: yes
     # https://repo.zabbix.com/zabbix/5.4/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.4-1+ubuntu20.04_all.deb
