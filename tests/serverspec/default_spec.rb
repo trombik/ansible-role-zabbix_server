@@ -3,10 +3,9 @@ require "serverspec"
 require "json"
 
 # rubocop:disable Style/GlobalVars
-$BACKEND_DATABASE ||= "postgresql"
+$BACKEND_DATABASE ||= "pgsql"
+package = "zabbix-server-#{$BACKEND_DATABASE}"
 # rubocop:enable Style/GlobalVars
-
-package = "zabbix-server-pgsql"
 service = "zabbix-server"
 log_dir = "/var/log/zabbix"
 pid_dir = "/run/zabbix"
@@ -27,7 +26,9 @@ api_url = "http://127.0.0.1/api_jsonrpc.php"
 
 case os[:family]
 when "freebsd"
-  package = "zabbix54-server"
+  # rubocop:disable Style/GlobalVars
+  package = "zabbix54-server-#{$BACKEND_DATABASE}"
+  # rubocop:enable Style/GlobalVars
   conf_dir = "/usr/local/etc/zabbix54"
   default_group = "wheel"
   service = "zabbix_server"
@@ -38,11 +39,7 @@ when "openbsd"
   user = "_zabbix"
   group = "_zabbix"
   # rubocop:disable Style/GlobalVars
-  package = if $BACKEND_DATABASE == "mysql"
-              "zabbix-server-5.0.10-mysql"
-            else
-              "zabbix-server-5.0.10-pgsql"
-            end
+  package = "zabbix-server-5.0.10-#{$BACKEND_DATABASE}"
   # rubocop:enable Style/GlobalVars
   conf_dir = "/etc/zabbix"
   default_group = "wheel"
@@ -50,14 +47,6 @@ when "openbsd"
   pid_dir = "/var/run/zabbix"
   socket_dir = "/var/run/zabbix"
   externalscripts_dir = "#{conf_dir}/externalscripts"
-when "ubuntu"
-  # rubocop:disable Style/GlobalVars
-  package = "zabbix-server-mysql" if $BACKEND_DATABASE == "mysql"
-  # rubocop:enable Style/GlobalVars
-when "devuan"
-  # rubocop:disable Style/GlobalVars
-  package = "zabbix-server-mysql" if $BACKEND_DATABASE == "mysql"
-  # rubocop:enable Style/GlobalVars
 end
 
 config = "#{conf_dir}/zabbix_server.conf"
@@ -148,20 +137,6 @@ when "freebsd"
     it { should be_grouped_into default_group }
     it { should be_mode 644 }
     its(:content) { should match Regexp.escape("Managed by ansible") }
-  end
-
-  describe command "pkg info #{package}" do
-    its(:stderr) { should eq "" }
-    # rubocop:disable Style/GlobalVars
-    case $BACKEND_DATABASE
-    when "mysql"
-      its(:stdout) { should match(/MYSQL\s+:\s+on/) }
-    when "postgresql"
-      its(:stdout) { should match(/PGSQL\s+:\s+on/) }
-    else
-      raise "Unknown $BACKEND_DATABASE `#{$BACKEND_DATABASE}`"
-    end
-    # rubocop:enable Style/GlobalVars
   end
 end
 
