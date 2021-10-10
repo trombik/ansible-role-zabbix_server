@@ -189,7 +189,8 @@ If a key does not exist in the dict, the key is `omit`ed.
 
 ## `zabbix_server_agent_tls_accept` and `zabbix_server_agent_tls_connect`
 
-These variables are used for setting TLS mode of an agent.
+These variables are used for setting TLS mode of an agent on the same host
+`zabbix` server is running.
 
 Possible values are:
 
