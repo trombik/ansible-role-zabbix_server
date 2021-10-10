@@ -28,6 +28,10 @@ but they are all optional. You may use any other roles.
 in the official FreeBSD package tree is built with `MySQL`. You need to build
 your own with `PostgreSQL` option enabled.
 
+You may use my own `zabbix` ports, which provide `mysql` and `pgsql`
+`FLAVOR`s. The ports can be found at
+[`trombik/freebsd-ports-zabbix`](https://github.com/trombik/freebsd-ports-zabbix).
+
 The role does not work out of box because `zabbix-api` port is not in the
 official FreeBSD ports tree. My `py-zabbix-api` is available at
 [`trombik/freebsd-ports-py-zabbix-api`](https://github.com/trombik/freebsd-ports-py-zabbix-api).
@@ -52,6 +56,9 @@ Supported TLS encryption includes:
 The role manages encryption setting of `zabbix` agent on the `zabbix` server.
 See `zabbix_server_agent_tls_accept` and `zabbix_server_agent_tls_connect`.
 The default is `No encryption`.
+
+TLS for `zabbix-frontend` can be implemented by any web server, and is out of
+the scope of this role.
 
 ### TLS between `zabbix` agent and `zabbix` server with certificates
 
@@ -83,7 +90,7 @@ request. The role does not use it.
 
 To distribute keys, the example uses [`trombik.x509_certificate`](https://github.com/trombik/ansible-role-x509_certificate) by including it.
 However, you may use other means. If you do not use
-[`trombik.x509_certificate`], set `zabbix_server_x509_certificates` to empty
+`trombik.x509_certificate`, set `zabbix_server_x509_certificates` to empty
 list (the default).
 
 # Requirements
@@ -132,6 +139,71 @@ The roles requires `ansible` collections. See [`requirements.yml`](requirements.
 | `zabbix_server_x509_cert_dir` | path to directory where certificates are kept. the role creates the directory | `"{{ zabbix_server_conf_dir }}/cert` |
 | `zabbix_server_x509_certificates` | list of certificates to manage. when the length is more then zero, the role include `trombik.x509_certificate` and pass the list to `trombik.x509_certificate` | `[]` |
 | `zabbix_server_debug` | if `no`, set `no_log: yes` on some tasks where sensitive information, such as password, is used in loop to prevent leak. do not set to `yes` on production | `no` |
+
+## `zabbix_server_usergroups`
+
+This variable is a list of dict. The role accepts all keys that
+`community.zabbix.zabbix_usergroup` accepts. If a key does not exist in the
+dict, the key is `omit`ed except the following keys:
+
+* `login_password` defaults to `zabbix_server_api_login_password`
+* `login_user` defaults to `zabbix_server_api_login_user`
+* `server_url` defaults to `zabbix_server_api_server_url`
+
+`name` is required.
+
+## `zabbix_server_users`
+
+This variable is a list of dict. The role accepts all keys that
+`community.zabbix.zabbix_user` accepts. If a key does not exist in the
+dict, the key is `omit`ed except the following keys:
+
+* `login_password` defaults to `zabbix_server_api_login_password`
+* `login_user` defaults to `zabbix_server_api_login_user`
+* `server_url` defaults to `zabbix_server_api_server_url`
+
+`alias` is required.
+
+## `zabbix_server_discovery_rules`
+
+This variable is a list of dict. The role accepts all keys that
+`community.zabbix.zabbix_discovery_rule` accepts. If a key does not exist in
+the dict, the key is `omit`ed except the following keys:
+
+* `login_password` defaults to `zabbix_server_api_login_password`
+* `login_user` defaults to `zabbix_server_api_login_user`
+* `server_url` defaults to `zabbix_server_api_server_url`
+
+`name` is required.
+
+## `zabbix_server_externalscripts_files`
+
+This variable is a list of dict. The role accepts all keys that
+`ansible.builtin.copy` accepts except `dest`. You cannot pass `dest`. `dest`
+is always `zabbix_server_externalscripts_dir/name`
+
+In addition, the role requires `name`, relative path from
+`zabbix_server_externalscripts_dir`.
+
+If a key does not exist in the dict, the key is `omit`ed.
+
+## `zabbix_server_agent_tls_accept` and `zabbix_server_agent_tls_connect`
+
+These variables are used for setting TLS mode of an agent.
+
+Possible values are:
+
+* 1: no encryption
+* 2: PSK
+* 4: certificate
+
+You can `OR` multiple values. `3` means `no encryption or PSK`.
+
+## `zabbix_server_x509_certificates`
+
+This variable is used for passing `x509` certificates to
+[`trombik.x509_certificate`](https://github.com/trombik/ansible-role-x509_certificate).
+The role imports `trombik.x509_certificate` when the variable is not empty.
 
 ## Debian
 
@@ -194,7 +266,7 @@ None
 # Example Playbook
 
 The example creates `zabbix` server with `zabbix` agent, including web UI and
-the database.
+`PostgreSQL` database.
 
 ```yaml
 ---
@@ -225,6 +297,7 @@ the database.
         state: present
         url: "http://pkg.i.trombik.org/{{ ansible_distribution_version | regex_replace('\\.') }}{{ ansible_architecture }}-default-default"
         priority: 99
+        state: present
 
     apt_repo_enable_apt_transport_https: yes
     # https://repo.zabbix.com/zabbix/5.4/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.4-1+ubuntu20.04_all.deb
