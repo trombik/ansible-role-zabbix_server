@@ -125,14 +125,64 @@
     - "'msg' in __zabbix_server_mysql_database_exist"
     - __zabbix_server_mysql_database_exist.msg is search("Unknown database")
 
-- name: Set allowed encryption methods of zabbix agent on the server
+- name: Set __fact_set_tls_psk_identity_tls_accept to default value, `no`
+  # when this variable is true, tls_psk_identity and tls_psk must be set to
+  # update tls_accept
+  ansible.builtin.set_fact:
+    __fact_set_tls_psk_identity_tls_accept: no
+
+- name: See if tls_accept includes PSK
+  ansible.builtin.set_fact:
+    __fact_set_tls_psk_identity_tls_accept: yes
+  when:
+    - zabbix_server_agent_tls_accept == 2 or zabbix_server_agent_tls_accept == 3 or zabbix_server_agent_tls_accept == 6 or zabbix_server_agent_tls_accept == 7
+
+- name: Set __fact_set_tls_psk_identity_tls_connect to default value, `no`
+  # when this variable is true, tls_psk_identity and tls_psk must be set to
+  # update tls_connect
+  ansible.builtin.set_fact:
+    __fact_set_tls_psk_identity_tls_connect: no
+
+- name: See if tls_connect include PSK
+  ansible.builtin.set_fact:
+    __fact_set_tls_psk_identity_tls_connect: yes
+  when:
+    - zabbix_server_agent_tls_connect == 2 or zabbix_server_agent_tls_connect == 3 or zabbix_server_agent_tls_connect == 6 or zabbix_server_agent_tls_connect == 7
+
+- name: Set allowed encryption methods of zabbix agent on the server (tls_accept)
   community.zabbix.zabbix_host:
     server_url: "{{ zabbix_server_api_server_url }}"
     login_password: "{{ zabbix_server_api_login_password }}"
     login_user: "{{ zabbix_server_api_login_user }}"
     host_name: "{{ zabbix_server_agent_host_name }}"
     tls_accept: "{{ zabbix_server_agent_tls_accept }}"
+    # XXX update tls_connect here as well because when
+    # * task A updates tls_accept to 2 with tls_psk
+    # * task B updates tls_connect to 2 with tls_psk
+    # then, tls_accept becomes 1. a bug in py-zabbix-api?
     tls_connect: "{{ zabbix_server_agent_tls_connect }}"
+    tls_psk_identity: "{% if __fact_set_tls_psk_identity_tls_accept %}{{ zabbix_server_agent_tls_psk_identity }}{% else %}{{ omit }}{% endif %}"
+    tls_psk: "{% if __fact_set_tls_psk_identity_tls_accept %}{{ zabbix_server_agent_tls_psk_value }}{% else %}{{ omit }}{% endif %}"
+  # XXX set `changed` to false when `tls_psk` is updated because the current
+  # py-zabbix-api always reports `changed=true`.
+  # #460 https://github.com/ansible-collections/community.zabbix/issues/460
+  changed_when: false
+
+- name: Set allowed encryption methods of zabbix agent on the server (tls_connect)
+  community.zabbix.zabbix_host:
+    server_url: "{{ zabbix_server_api_server_url }}"
+    login_password: "{{ zabbix_server_api_login_password }}"
+    login_user: "{{ zabbix_server_api_login_user }}"
+    host_name: "{{ zabbix_server_agent_host_name }}"
+    tls_connect: "{{ zabbix_server_agent_tls_connect }}"
+    tls_psk_identity: "{% if __fact_set_tls_psk_identity_tls_connect %}{{ zabbix_server_agent_tls_psk_identity }}{% else %}{{ omit }}{% endif %}"
+    tls_psk: "{% if __fact_set_tls_psk_identity_tls_connect %}{{ zabbix_server_agent_tls_psk_value }}{% else %}{{ omit }}{% endif %}"
+  # XXX set `changed` to false when `tls_psk` is updated because the current
+  # py-zabbix-api always reports `changed=true`.
+  # #460 https://github.com/ansible-collections/community.zabbix/issues/460
+  changed_when: false
+  # XXX disable the task until the issue above is resolved
+  when: false
 
 - name: Create zabbix_server_x509_cert_dir
   ansible.builtin.file:

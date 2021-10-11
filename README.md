@@ -52,6 +52,7 @@ in the official documentation for details.
 Supported TLS encryption includes:
 
 * TLS between `zabbix` agent and `zabbix` server with certificates
+* TLS between `zabbix` agent and `zabbix` server with PSK (experimental)
 
 The role manages encryption setting of `zabbix` agent on the `zabbix` server.
 See `zabbix_server_agent_tls_accept` and `zabbix_server_agent_tls_connect`.
@@ -92,6 +93,34 @@ To distribute keys, the example uses [`trombik.x509_certificate`](https://github
 However, you may use other means. If you do not use
 `trombik.x509_certificate`, set `zabbix_server_x509_certificates` to empty
 list (the default).
+
+### TLS between `zabbix` agent and `zabbix` server with PSK (experimental)
+
+Pre-Shared Key TLS is experimental because `ansible.community.zabbix` does not
+support `zabbix` 5.4.x. See
+[issue 460](https://github.com/ansible-collections/community.zabbix/issues/460).
+
+See [Using pre-shared keys](https://www.zabbix.com/documentation/current/manual/encryption/using_pre_shared_keys)
+in the official documentation for details.
+
+To enable PSK TLS, you need to create a PSK. A random PSK can be
+created by:
+
+```console
+openssl rand -hex 32
+```
+
+`zabbix_server_agent_tls_accept` and `zabbix_server_agent_tls_connect` should
+include PSK, e.g. the values should be `2`.
+
+`zabbix_server_agent_tls_psk_identity` should be set to `psk_identity`.
+
+`zabbix_server_agent_tls_psk_value` should be set to the random PSK above.
+
+The `zabbix-agent` on the server should be configured to use the same
+`psk_identity` and the random PSK.
+
+See PSK TLS example at: [`tests/serverspec/psk.yml`](tests/serverspec/psk.yml).
 
 # Requirements
 
@@ -136,6 +165,8 @@ The roles requires `ansible` collections. See [`requirements.yml`](requirements.
 | `zabbix_server_agent_host_name` | name of the `zabbix` agent on `zabbix` server | `Zabbix server` |
 | `zabbix_server_agent_tls_accept` | the value of `TLSAccept` for `zabbix` agent on `zabbix` server | `1` |
 | `zabbix_server_agent_tls_connect` | the value of `TLSConnect` for `zabbix` agent on `zabbix` server | `1` |
+| `zabbix_server_agent_tls_psk_identity` | string of  PSK identity used for `zabbix` agent on `zabbix` server | `""` |
+| `zabbix_server_agent_tls_psk_value` | the value of PSK used for `zabbix` agent on `zabbix` server | `""` |
 | `zabbix_server_x509_cert_dir` | path to directory where certificates are kept. the role creates the directory | `"{{ zabbix_server_conf_dir }}/cert` |
 | `zabbix_server_x509_certificates` | list of certificates to manage. when the length is more then zero, the role include `trombik.x509_certificate` and pass the list to `trombik.x509_certificate` | `[]` |
 | `zabbix_server_debug` | if `no`, set `no_log: yes` on some tasks where sensitive information, such as password, is used in loop to prevent leak. do not set to `yes` on production | `no` |

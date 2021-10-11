@@ -1,0 +1,486 @@
+---
+- hosts: localhost
+  roles:
+    - role: trombik.sysctl
+    - role: trombik.freebsd_pkg_repo
+      when: ansible_os_family == 'FreeBSD'
+    - role: trombik.apt_repo
+      when: ansible_os_family == 'Debian'
+    - role: trombik.pip
+      when: ansible_os_family == 'Debian' or ansible_os_family == 'OpenBSD'
+    - role: trombik.postgresql
+    - role: trombik.zabbix_agent
+    - role: trombik.zabbix_frontend
+    - role: trombik.nginx
+    # XXX zabbix_server uses APIs. the frontend must be configured
+    # before server
+    - role: trombik.php_fpm
+    - ansible-role-zabbix_server
+  vars:
+    # XXX use my own package repository as the package in the official package
+    # tree does not include postgresql support.
+    # also, py38-zabbix-api is not in the tree.
+    freebsd_pkg_repo:
+      local:
+        enabled: "true"
+        state: present
+        url: "http://pkg.i.trombik.org/{{ ansible_distribution_version | regex_replace('\\.') }}{{ ansible_architecture }}-default-default"
+        priority: 99
+
+    apt_repo_enable_apt_transport_https: yes
+    # https://repo.zabbix.com/zabbix/5.4/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.4-1+ubuntu20.04_all.deb
+    apt_repo_keys_to_add:
+      - https://repo.zabbix.com/zabbix-official-repo.key
+    apt_repo_to_add:
+      - "deb https://repo.zabbix.com/zabbix/5.4/{% if ansible_distribution == 'Devuan' %}debian {{ apt_repo_codename_devuan_to_debian[ansible_distribution_release] }} main{% else %}{{ ansible_distribution | lower }} {{ ansible_distribution_release }} main {% endif %}"
+      - "deb-src https://repo.zabbix.com/zabbix/5.4/{% if ansible_distribution == 'Devuan' %}debian {{ apt_repo_codename_devuan_to_debian[ansible_distribution_release] }} main{% else %}{{ ansible_distribution | lower }} {{ ansible_distribution_release }} main {% endif %}"
+    zabbix_server_debug: yes
+    zabbix_server_backend_database_password: password
+
+    # XXX no trailing `/`
+    zabbix_server_api_server_url: http://localhost
+
+    # password hash can be created by:
+    # <?php
+    # $p = password_hash("api_password", PASSWORD_BCRYPT);
+    # echo "$p\n"
+    # ?>
+    #
+    # this is the password of `Admin` user.
+    zabbix_server_api_login_password: api_password
+    zabbix_server_usergroups:
+      - name: Developers
+        debug_mode: enabled
+        rights:
+          - host_group: Linux servers
+            permission: read-write
+        state: present
+    zabbix_server_users:
+      - alias: trombik
+        name: Me
+        surname: Surname
+        passwd: password
+        type: Zabbix admin
+        usrgrps:
+          - Guests
+          - Developers
+      - alias: root
+        name: Root
+        surname: Surname
+        passwd: password
+        type: Zabbix super admin
+        usrgrps:
+          - Zabbix administrators
+    zabbix_server_discovery_rules:
+      - name: LAN
+        iprange: 192.168.1.1-255
+        dchecks:
+          - type: ICMP
+          - type: Zabbix
+            key: "system.hostname"
+            ports: 10050
+            uniq: yes
+            host_source: "discovery"
+        status: enabled
+
+    zabbix_server_agent_tls_accept: 2
+    zabbix_server_agent_tls_connect: 2
+    zabbix_server_agent_tls_psk_identity: "{{ zabbix_agent_psk['identity'] }}"
+    zabbix_server_agent_tls_psk_value: "{{ zabbix_agent_psk['value'] }}"
+    zabbix_server_config: |
+      ListenPort={{ zabbix_server_listen_port }}
+      DBHost={{ zabbix_server_backend_database_host }}
+      DBName={{ zabbix_server_backend_database_name }}
+      DBUser={{ zabbix_server_backend_database_user }}
+      DBPassword={{ zabbix_server_backend_database_password }}
+      LogSlowQueries=3000
+      StatsAllowedIP=127.0.0.1
+      SocketDir={{ zabbix_server_socket_dir }}
+      Timeout=4
+      LogFile={{ zabbix_server_log_file }}
+      LogFileSize=0
+
+      {% if ansible_os_family == 'FreeBSD' or ansible_os_family == 'OpenBSD' %}
+      FpingLocation=/usr/local/sbin/fping
+      Fping6Location=/usr/local/sbin/fping6
+      {% else %}
+      # Ubuntu's default
+      PidFile={{ zabbix_server_pid_file }}
+      SNMPTrapperFile=/var/log/snmptrap/snmptrap.log
+      FpingLocation=/usr/bin/fping
+      Fping6Location=/usr/bin/fping6
+      {% endif %}
+
+    zabbix_server_externalscripts_files:
+      - name: test.sh
+        content: |
+          #!/bin/sh
+          # Test external script
+          echo 1
+          exit 0
+        validate: sh -n %s
+        state: present
+      - name: remove_me.sh
+        state: absent
+
+    # _______________________________________________zabbix_agent
+    zabbix_agent_debug: yes
+    zabbix_agent_config: |
+      Server={{ zabbix_agent_server }}
+      ListenPort={{ zabbix_agent_listen_port }}
+      ListenIP={{ zabbix_agent_listen_ip }}
+      ServerActive={{ zabbix_agent_server }}
+      Hostname=Zabbix server
+      LogFileSize=0
+      LogFile={{ zabbix_agent_log_file }}
+
+      {% if ansible_os_family == 'Debian' %}
+      PidFile={{ zabbix_agent_pid_file }}
+      {% endif %}
+
+      TLSAccept=psk
+      TLSConnect=psk
+      TLSPSKFile={{ zabbix_agent_psk_dir }}/{{ zabbix_agent_psk['name'] }}
+      TLSPSKIdentity={{ zabbix_agent_psk['identity'] }}
+
+      Include={{ zabbix_agent_conf_d_dir }}/*.conf
+    # _______________________________________________PSK
+    zabbix_agent_psk_dir: "{{ zabbix_agent_conf_dir }}/psk"
+    # openssl rand -hex 32
+    zabbix_agent_psk:
+      name: default.psk
+      identity: default
+      value: 202bedb620721ba6126b1d0c1239044237397dc544a5c28095a5bb75925f471c
+      state: present
+
+    # _______________________________________________postgresql
+    postgresql_initial_password: password
+    postgresql_debug: yes
+    os_sysctl:
+      FreeBSD: {}
+      OpenBSD:
+        # for postgresql
+        kern.seminfo.semmni: 60
+        kern.seminfo.semmns: 1024
+
+        # zabbix server fails to start:
+        # cannot initialize configuration cache: cannot get private shared
+        # memory of size 8388608 for configuration cache: [12] Cannot allocate
+        # memory
+        #
+        # cannot initialize database cache: cannot get private shared memory
+        # of size 16777216 for history cache
+        kern.shminfo.shmmax: 51200000
+      Debian: {}
+      RedHat: {}
+    sysctl: "{{ os_sysctl[ansible_os_family] }}"
+
+    os_postgresql_extra_packages:
+      FreeBSD:
+        - "databases/postgresql{{ postgresql_major_version }}-contrib"
+      OpenBSD:
+        - postgresql-contrib
+      Debian:
+        - postgresql-contrib
+      RedHat:
+        - "postgresql{{ postgresql_major_version }}-contrib"
+
+    postgresql_extra_packages: "{{ os_postgresql_extra_packages[ansible_os_family] }}"
+    postgresql_pg_hba_config: |
+      host    all             all             127.0.0.1/32            {{ postgresql_default_auth_method }}
+      host    all             all             ::1/128                 {{ postgresql_default_auth_method }}
+      local   replication     all                                     trust
+      host    replication     all             127.0.0.1/32            trust
+      host    replication     all             ::1/128                 trust
+    postgresql_config: |
+      {% if ansible_os_family == 'Debian' %}
+      data_directory = '{{ postgresql_db_dir }}'
+      hba_file = '{{ postgresql_conf_dir }}/pg_hba.conf'
+      ident_file = '{{ postgresql_conf_dir }}/pg_ident.conf'
+      external_pid_file = '/var/run/postgresql/{{ postgresql_major_version }}-main.pid'
+      port = 5432
+      max_connections = 100
+      unix_socket_directories = '/var/run/postgresql'
+      ssl = on
+      ssl_cert_file = '/etc/ssl/certs/ssl-cert-snakeoil.pem'
+      ssl_key_file = '/etc/ssl/private/ssl-cert-snakeoil.key'
+      shared_buffers = 128MB
+      dynamic_shared_memory_type = posix
+      log_line_prefix = '%m [%p] %q%u@%d '
+      log_timezone = 'UTC'
+      cluster_name = '{{ postgresql_major_version }}/main'
+      stats_temp_directory = '/var/run/postgresql/{{ postgresql_major_version }}-main.pg_stat_tmp'
+      datestyle = 'iso, mdy'
+      timezone = 'UTC'
+      lc_messages = 'C'
+      lc_monetary = 'C'
+      lc_numeric = 'C'
+      lc_time = 'C'
+      default_text_search_config = 'pg_catalog.english'
+      include_dir = 'conf.d'
+      password_encryption = {{ postgresql_default_auth_method }}
+      {% else %}
+      max_connections = 100
+      shared_buffers = 128MB
+      dynamic_shared_memory_type = posix
+      max_wal_size = 1GB
+      min_wal_size = 80MB
+      log_destination = 'syslog'
+      log_timezone = 'UTC'
+      update_process_title = off
+      datestyle = 'iso, mdy'
+      timezone = 'UTC'
+      lc_messages = 'C'
+      lc_monetary = 'C'
+      lc_numeric = 'C'
+      lc_time = 'C'
+      default_text_search_config = 'pg_catalog.english'
+      password_encryption = {{ postgresql_default_auth_method }}
+      {% endif %}
+    postgresql_users:
+      - name: "{{ zabbix_server_backend_database_user }}"
+        password: "{{ zabbix_server_backend_database_password }}"
+        role_attr_flags: CREATEDB
+
+    postgresql_databases: []
+
+    project_postgresql_initdb_flags: --encoding=utf-8 --lc-collate=C --locale=en_US.UTF-8
+    project_postgresql_initdb_flags_pwfile: "--pwfile={{ postgresql_initial_password_file }}"
+    project_postgresql_initdb_flags_auth: "--auth-host={{ postgresql_default_auth_method }} --auth-local={{ postgresql_default_auth_method }}"
+    os_postgresql_initdb_flags:
+      FreeBSD: "{{ project_postgresql_initdb_flags }} {{ project_postgresql_initdb_flags_pwfile }} {{ project_postgresql_initdb_flags_auth }}"
+      OpenBSD: "{{ project_postgresql_initdb_flags }} {{ project_postgresql_initdb_flags_pwfile }} {{ project_postgresql_initdb_flags_auth }}"
+      RedHat: "{{ project_postgresql_initdb_flags }} {{ project_postgresql_initdb_flags_pwfile }} {{ project_postgresql_initdb_flags_auth }}"
+      # XXX you cannot use --auth-host or --auth-local here because
+      # pg_createcluster, which is executed during the installation, overrides
+      # them, forcing md5
+      Debian: "{{ project_postgresql_initdb_flags }} {{ project_postgresql_initdb_flags_pwfile }}"
+
+    postgresql_initdb_flags: "{{ os_postgresql_initdb_flags[ansible_os_family] }}"
+    os_postgresql_flags:
+      FreeBSD: |
+        postgresql_flags="-w -s -m fast"
+      OpenBSD: ""
+      Debian: ""
+      RedHat: ""
+    postgresql_flags: "{{ os_postgresql_flags[ansible_os_family] }}"
+
+    # _______________________________________________nginx
+    nginx_flags: -q
+    nginx_config: |
+      {% if ansible_os_family == 'Debian' or ansible_os_family == 'RedHat' %}
+      user {{ nginx_user }};
+      pid /run/nginx.pid;
+      {% endif %}
+      worker_processes 1;
+      error_log {{ nginx_error_log_file }};
+      events {
+        worker_connections 1024;
+      }
+      http {
+        include {{ nginx_conf_dir }}/mime.types;
+        include {{ nginx_conf_fragments_dir }}/foo.conf;
+        access_log {{ nginx_access_log_file }};
+        default_type application/octet-stream;
+        sendfile on;
+        keepalive_timeout 65;
+        server {
+          listen 80;
+          server_name localhost;
+          root {{ zabbix_frontend_web_root }};
+          location / {
+            index index.html index.php;
+          }
+          # see https://www.nginx.com/resources/wiki/start/topics/examples/phpfcgi/
+          location ~ [^/]\.php(/|$) {
+            fastcgi_split_path_info ^(.+?\.php)(/.*)$;
+            if (!-f $document_root$fastcgi_script_name) {
+              return 404;
+            }
+            fastcgi_param HTTP_PROXY "";
+            fastcgi_pass 127.0.0.1:9000;
+            fastcgi_index index.php;
+            {% if ansible_os_family == 'OpenBSD' %}
+            # XXX nginx on OpenBSD chroot's in /var/www
+            fastcgi_param SCRIPT_FILENAME /var/www$document_root$fastcgi_script_name;
+            {% else %}
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+            {% endif %}
+            fastcgi_intercept_errors on;
+            include {{ nginx_conf_dir }}/fastcgi_params;
+          }
+          error_page 500 502 503 504 /50x.html;
+          location = /50x.html {
+          }
+        }
+      }
+    nginx_config_fragments:
+      - name: foo.conf
+        config: "# FOO"
+        state: present
+    nginx_extra_packages_by_os:
+      FreeBSD: []
+      OpenBSD: []
+      Debian:
+        - nginx-extras
+      RedHat: []
+    nginx_extra_packages: "{{ nginx_extra_packages_by_os[ansible_os_family] }}"
+    redhat_repo:
+      epel:
+        mirrorlist: "http://mirrors.fedoraproject.org/mirrorlist?repo=epel-{{ ansible_distribution_major_version }}&arch={{ ansible_architecture }}"
+        gpgcheck: yes
+        enabled: yes
+
+    nginx_htpasswd_users: []
+
+    # _______________________________________________zabbix_frontend
+    # default account: Admin
+    # default password: see zabbix_server_api_login_password
+    zabbix_frontend_config: |
+      // Zabbix GUI configuration file.
+
+      $DB['TYPE']				= '{{ zabbix_server_backend_database | upper }}';
+      $DB['SERVER']			= '{{ zabbix_server_backend_database_host }}';
+      $DB['PORT']				= '0';
+      $DB['DATABASE']			= '{{ zabbix_server_backend_database_name }}';
+      $DB['USER']				= '{{ zabbix_server_backend_database_user }}';
+      $DB['PASSWORD']			= '{{ zabbix_server_backend_database_password }}';
+
+      // Schema name. Used for PostgreSQL.
+      $DB['SCHEMA']			= '';
+
+      // Used for TLS connection.
+      $DB['ENCRYPTION']		= false;
+      $DB['KEY_FILE']			= '';
+      $DB['CERT_FILE']		= '';
+      $DB['CA_FILE']			= '';
+      $DB['VERIFY_HOST']		= false;
+      $DB['CIPHER_LIST']		= '';
+
+      // Vault configuration. Used if database credentials are stored in Vault secrets manager.
+      $DB['VAULT_URL']		= '';
+      $DB['VAULT_DB_PATH']	= '';
+      $DB['VAULT_TOKEN']		= '';
+
+      // Use IEEE754 compatible value range for 64-bit Numeric (float) history values.
+      // This option is enabled by default for new Zabbix installations.
+      // For upgraded installations, please read database upgrade notes before enabling this option.
+      $DB['DOUBLE_IEEE754']	= true;
+
+      $ZBX_SERVER				= 'localhost';
+      $ZBX_SERVER_PORT		= '10051';
+      $ZBX_SERVER_NAME		= 'my zabbix';
+
+      $IMAGE_FORMAT_DEFAULT	= IMAGE_FORMAT_PNG;
+
+      // Uncomment this block only if you are using Elasticsearch.
+      // Elasticsearch url (can be string if same url is used for all types).
+      //$HISTORY['url'] = [
+      //	'uint' => 'http://localhost:9200',
+      //	'text' => 'http://localhost:9200'
+      //];
+      // Value types stored in Elasticsearch.
+      //$HISTORY['types'] = ['uint', 'text'];
+
+      // Used for SAML authentication.
+      // Uncomment to override the default paths to SP private key, SP and IdP X.509 certificates, and to set extra settings.
+      //$SSO['SP_KEY']			= 'conf/certs/sp.key';
+      //$SSO['SP_CERT']			= 'conf/certs/sp.crt';
+      //$SSO['IDP_CERT']		= 'conf/certs/idp.crt';
+      //$SSO['SETTINGS']		= [];
+    # _______________________________________________php_fpm
+    php_additional_packages_map:
+      FreeBSD:
+        - "archivers/php{{ php_version_without_dot }}-zip"
+        - "textproc/php{{ php_version_without_dot }}-xsl"
+        - "databases/php{{ php_version_without_dot }}-pgsql"
+      OpenBSD:
+        - "php-zip%{{ php_version }}"
+        - "php-xsl%{{ php_version }}"
+        - "php-pgsql%{{ php_version }}"
+      Debian:
+        - "php{{ php_version }}-zip"
+        - "php{{ php_version }}-xsl"
+        - "php{{ php_version }}-pgsql"
+    php_additional_packages: "{{ php_additional_packages_map[ansible_os_family] }}"
+
+    php_ini_config: |
+      [PHP]
+      engine = On
+      short_open_tag = Off
+      precision = 14
+      output_buffering = 4096
+      zlib.output_compression = Off
+      implicit_flush = Off
+      unserialize_callback_func =
+      serialize_precision = -1
+      disable_functions =
+      disable_classes =
+      zend.enable_gc = On
+      expose_php = On
+      max_execution_time = 30
+      max_input_time = 60
+      memory_limit = 128M
+      error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT
+      display_errors = Off
+      display_startup_errors = Off
+      log_errors = On
+      log_errors_max_len = 1024
+      ignore_repeated_errors = Off
+      ignore_repeated_source = Off
+      report_memleaks = On
+      html_errors = On
+      variables_order = "GPCS"
+      request_order = "GP"
+      register_argc_argv = Off
+      auto_globals_jit = On
+      post_max_size = 8M
+      auto_prepend_file =
+      auto_append_file =
+      default_mimetype = "text/html"
+      default_charset = "UTF-8"
+      doc_root =
+      user_dir =
+      enable_dl = Off
+      file_uploads = On
+      upload_max_filesize = 2M
+      max_file_uploads = 20
+      allow_url_fopen = On
+      allow_url_include = Off
+      default_socket_timeout = 60
+
+      ; for zabbix
+      ; see https://www.zabbix.com/documentation/current/manual/installation/frontend
+      post_max_size = 16M
+      max_execution_time = 300
+      max_input_time = 300
+
+      {% if ansible_os_family == 'OpenBSD' %}
+      date.timezone = "UTC"
+      extension=gd.so
+      extension=pgsql.so
+      extension=xsl.so
+      extension=zip.so
+      {% endif %}
+
+      [CLI Server]
+      cli_server.color = On
+
+    php_fpm_config: |
+      [global]
+      pid = {{ php_fpm_pid_file }}
+      error_log = {{ php_fpm_log_dir }}/php-fpm.log
+      include = {{ php_fpm_pool_dir }}/*.conf
+    php_fpm_pool_config:
+      - name: www
+        content: |
+          [www]
+          user = {{ php_fpm_user }}
+          group = {{ php_fpm_group }}
+          listen = 127.0.0.1:9000
+          pm = dynamic
+          pm.max_children = 10
+          pm.start_servers = 2
+          pm.min_spare_servers = 1
+          pm.max_spare_servers = 3
+          access.log = {{ php_fpm_log_dir }}/access.log
