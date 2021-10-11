@@ -12,6 +12,11 @@ The role supports FreeBSD, OpenBSD, and Debian variants.
 The role support `PostgreSQL`, `MySQL` and `MariaDB`. An example for `MySQL`
 can be found at: [`tests/serverspec/mysql.yml`](tests/serverspec/mysql.yml)
 
+The role manages `zabbix-server` only. Other components, such as
+`zabbix-agent`, `zabbix-frontend`, web server, and database, are not the scope
+of this role. It is your responsibility to manage other components. The
+example uses my own roles.
+
 The role is still in beta.
 
 ## Notes for all users
