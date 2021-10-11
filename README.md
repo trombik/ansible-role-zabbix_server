@@ -31,6 +31,7 @@ your own with `PostgreSQL` option enabled.
 You may use my own `zabbix` ports, which provide `mysql` and `pgsql`
 `FLAVOR`s. The ports can be found at
 [`trombik/freebsd-ports-zabbix`](https://github.com/trombik/freebsd-ports-zabbix).
+See also [Bug 259037](https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=259037).
 
 The role does not work out of box because `zabbix-api` port is not in the
 official FreeBSD ports tree. My `py-zabbix-api` is available at
@@ -113,7 +114,10 @@ openssl rand -hex 32
 `zabbix_server_agent_tls_accept` and `zabbix_server_agent_tls_connect` should
 include PSK, e.g. the values should be `2`.
 
-`zabbix_server_agent_tls_psk_identity` should be set to `psk_identity`.
+`zabbix_server_agent_tls_psk_identity` should be set to `psk_identity` string.
+The string identifies the PSK. It can be anything, e.g. `my_psk`,
+`psk_for_zabbix`, or even `default`. The agent and the server must use the
+same `psk_identity` string and the same PSK.
 
 `zabbix_server_agent_tls_psk_value` should be set to the random PSK above.
 
