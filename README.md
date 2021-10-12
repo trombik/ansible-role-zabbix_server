@@ -27,6 +27,14 @@ controlled by `zabbix_server_api_login_password`.
 The example uses many my `ansible` roles (see [`requirements.yml`](requirements.yml`)),
 but they are all optional. You may use any other roles.
 
+The easiest way to try the role is to use the example as-is. The examples are
+tested, and thus, a working example. The role has many variables, but most of
+them have sane defaults. Unless you change the platform, or versions of
+applications, you need to modify few of them. Merge the role in your project,
+use the example play, remove variables for portability, such as `os_*`
+variables in the examples. If it works, replace other roles in the example
+with your roles.
+
 ## Notes for FreeBSD users
 
 [`net-mgmt/zabbix54-server`](https://www.freshports.org/net-mgmt/zabbix54-server/)
@@ -41,6 +49,7 @@ See also [Bug 259037](https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=259037).
 The role does not work out of box because `zabbix-api` port is not in the
 official FreeBSD ports tree. My `py-zabbix-api` is available at
 [`trombik/freebsd-ports-py-zabbix-api`](https://github.com/trombik/freebsd-ports-py-zabbix-api).
+See also [Bug 259087](https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=259087).
 
 ## Notes for Debian users
 
@@ -95,8 +104,8 @@ request. The role does not use it.
 
 `server.csr` is a signing request. The role does not use it.
 
-To distribute keys, the example uses [`trombik.x509_certificate`](https://github.com/trombik/ansible-role-x509_certificate) by including it.
-However, you may use other means. If you do not use
+To distribute keys, the example uses [`trombik.x509_certificate`](https://github.com/trombik/ansible-role-x509_certificate)
+by including it.  However, you may use other means. If you do not use
 `trombik.x509_certificate`, set `zabbix_server_x509_certificates` to empty
 list (the default).
 
@@ -307,7 +316,10 @@ None
 # Example Playbook
 
 The example creates `zabbix` server with `zabbix` agent, including web UI and
-`PostgreSQL` database.
+`PostgreSQL` database. It creates everything on a single host, but you can
+easily split everything on different hosts. Configurations are, mostly, taken
+from the default configuration files, but they are not necessarily
+recommended. They are only for testing purpose.
 
 ```yaml
 ---
